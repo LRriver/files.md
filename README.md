@@ -14,6 +14,7 @@ make install && make run
 - `Concision`: The code is easy to discern the relevant details, and the naming and structure guide the reader through these details.  
 - `Maintainability`: The code is easy for a future programmer to modify correctly.  
 - `Consistency`: The code is consistent across the codebase  
+
 Refer to [developer's handbook](https://github.com/zakirullin/cognitive-load) for more comprehensive guiding rules.
 
 ### Guidelines
