@@ -1,3 +1,4 @@
+![Gopher](https://newrelic.com/sites/default/files/2021-04/golang-gopher.jpg)
 ### Spin it up 🌱
 ```bash
 make install && make run
