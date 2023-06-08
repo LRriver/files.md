@@ -58,10 +58,14 @@ func main() {
 	}(quit)
 
 	go func(redis *miniredis.Miniredis, tg *tg.TG) {
+		fsBackend := afero.NewOsFs()
 		for {
 			select {
 			case <-ticker.C:
-				worker.MoveDueTasksToToday(redis)
+				err := worker.MoveDueTasksToToday(redis, fsBackend)
+				if err != nil {
+					fmt.Printf("Worker's error: %s\n", err)
+				}
 			case <-quit:
 				ticker.Stop()
 				return
@@ -89,7 +93,6 @@ func main() {
 				fmt.Printf("Bot's error: can't create FS: %s\n", err)
 				return
 			}
-			bot := internal.NewBot(userID, telegram, fsys, db.NewDB(redis))
 
 			conf := userconfig.NewConfig()
 			// TODO paths to envs
@@ -100,6 +103,8 @@ func main() {
 				return
 			}
 			defer conf.Save(configPath)
+
+			bot := internal.NewBot(userID, telegram, fsys, db.NewDB(redis), conf)
 
 			if err := bot.Reply(u); err != nil {
 				fmt.Printf("Bot's error: %s\n", err)

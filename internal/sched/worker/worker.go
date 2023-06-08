@@ -13,24 +13,22 @@ import (
 	"zakirullin/dumpbot/internal/sched"
 )
 
-func MoveDueTasksToToday(redis *miniredis.Miniredis) {
+func MoveDueTasksToToday(redis *miniredis.Miniredis, fsBackend afero.Fs) error {
 	ids, err := fs.AllUserIDs()
 	if err != nil {
-		fmt.Printf("moveDueTasksForToday: %s\n", err)
+		return fmt.Errorf("moveDueTasksForToday: %s\n", err)
 	}
 
 	for _, id := range ids {
 		database := db.NewDB(redis)
 		sch, err := database.Schedule(id)
 		if err != nil {
-			fmt.Printf("moveDueTasksForToday: can't get sch: %s", err)
-			return
+			return fmt.Errorf("moveDueTasksForToday: can't get sch: %s", err)
 		}
 
-		fsys, err := fs.NewFS(id, afero.NewOsFs())
+		fsys, err := fs.NewFS(id, fsBackend)
 		if err != nil {
-			fmt.Printf("moveDueTasksForToday: can't create FS: %s", err)
-			return
+			return fmt.Errorf("moveDueTasksForToday: can't create FS: %s", err)
 		}
 		for filename, cron := range sch {
 			if time.Now().Unix() >= cron.RunAt {
@@ -55,6 +53,7 @@ func MoveDueTasksToToday(redis *miniredis.Miniredis) {
 			}
 		}
 	}
+	return nil
 }
 
 func moveTaskToToday(filename string, fsys *fs.FS) error {

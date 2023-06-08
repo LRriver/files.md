@@ -1,12 +1,14 @@
 package internal
 
 import (
-	"os"
-	"testing"
-
 	"github.com/alicebob/miniredis/v2"
 	"github.com/spf13/afero"
 	"github.com/stretchr/testify/require"
+	"os"
+	"testing"
+	"time"
+	"zakirullin/dumpbot/internal/sched/worker"
+	"zakirullin/dumpbot/internal/userconfig"
 
 	"zakirullin/dumpbot/internal/db"
 	"zakirullin/dumpbot/internal/fs"
@@ -32,7 +34,7 @@ func TestAddTaskToToday(t *testing.T) {
 
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, fsys, db.NewDB(redis))
+	bot := NewBot(-1, tgram, fsys, db.NewDB(redis), &userconfig.DefaultConfig)
 	err = bot.Reply(fake.NewUpd(-1, "New task"))
 	r.Nil(err)
 
@@ -55,7 +57,7 @@ func TestAddMultilineTaskToToday(t *testing.T) {
 	r.Nil(err)
 	defer redis.Close()
 
-	bot := NewBot(-1, tgram, fsys, db.NewDB(redis))
+	bot := NewBot(-1, tgram, fsys, db.NewDB(redis), &userconfig.DefaultConfig)
 	err = bot.Reply(fake.NewUpd(-1, "New task\nContent"))
 	r.Nil(err)
 
@@ -83,7 +85,7 @@ func TestAddTaskWithSpecCharsToToday(t *testing.T) {
 	r.Nil(err)
 	defer redis.Close()
 
-	bot := NewBot(-1, tgram, fsys, db.NewDB(redis))
+	bot := NewBot(-1, tgram, fsys, db.NewDB(redis), &userconfig.DefaultConfig)
 	err = bot.Reply(fake.NewUpd(-1, "New task\nUrl! http://g.com (Also_text] ##header\n-item1\n-item2\n1+1=2"))
 	r.Nil(err)
 
@@ -114,7 +116,7 @@ func TestAddTaskToLater(t *testing.T) {
 	r.Nil(err)
 	defer redis.Close()
 
-	bot := NewBot(-1, tgram, fsys, db.NewDB(redis))
+	bot := NewBot(-1, tgram, fsys, db.NewDB(redis), &userconfig.DefaultConfig)
 	err = bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("mv", []string{"today", "0824149b387", "later"})))
 	r.Nil(err)
 
@@ -143,7 +145,7 @@ func TestCompleteTask(t *testing.T) {
 
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, fsys, db.NewDB(redis))
+	bot := NewBot(-1, tgram, fsys, db.NewDB(redis), &userconfig.DefaultConfig)
 	err = bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("comp", []string{"today", "0824149b387"})))
 	r.Nil(err)
 
@@ -173,7 +175,7 @@ func TestToday(t *testing.T) {
 
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, fsys, db.NewDB(redis))
+	bot := NewBot(-1, tgram, fsys, db.NewDB(redis), &userconfig.DefaultConfig)
 	err = bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("today", nil)))
 	r.Nil(err)
 
@@ -200,7 +202,7 @@ func TestLater(t *testing.T) {
 
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, fsys, db.NewDB(redis))
+	bot := NewBot(-1, tgram, fsys, db.NewDB(redis), &userconfig.DefaultConfig)
 	err = bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("later", nil)))
 	r.Nil(err)
 
@@ -229,7 +231,7 @@ func TestTodayWithMultilineTasks(t *testing.T) {
 	tgram := fake.NewTG()
 
 	upd := fake.NewUpdCmdFake(-1, tg.NewCmd("today", nil))
-	bot := NewBot(-1, tgram, fsys, db.NewDB(redis))
+	bot := NewBot(-1, tgram, fsys, db.NewDB(redis), &userconfig.DefaultConfig)
 	err = bot.Reply(upd)
 	r.Nil(err)
 
@@ -257,7 +259,7 @@ func TestDocs(t *testing.T) {
 
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, fsys, db.NewDB(redis))
+	bot := NewBot(-1, tgram, fsys, db.NewDB(redis), &userconfig.DefaultConfig)
 	err = bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("docs", nil)))
 	r.Nil(err)
 
@@ -285,7 +287,7 @@ func TestChecklists(t *testing.T) {
 
 	tgram := fake.NewTG()
 
-	bot := NewBot(-1, tgram, fsys, db.NewDB(redis))
+	bot := NewBot(-1, tgram, fsys, db.NewDB(redis), &userconfig.DefaultConfig)
 	err = bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("checklists", nil)))
 	r.Nil(err)
 
@@ -312,7 +314,7 @@ func TestAddSingleItemToChecklist(t *testing.T) {
 	defer redis.Close()
 
 	tgram := fake.NewTG()
-	bot := NewBot(-1, tgram, fsys, db.NewDB(redis))
+	bot := NewBot(-1, tgram, fsys, db.NewDB(redis), &userconfig.DefaultConfig)
 	err = bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("mv_to_chk", []string{"7b72407ca70", "-checklist1-"})))
 	r.Nil(err)
 
@@ -341,7 +343,7 @@ func TestAddMultipleItemsToChecklist(t *testing.T) {
 	defer redis.Close()
 
 	tgram := fake.NewTG()
-	bot := NewBot(-1, tgram, fsys, db.NewDB(redis))
+	bot := NewBot(-1, tgram, fsys, db.NewDB(redis), &userconfig.DefaultConfig)
 	err = bot.Reply(fake.NewUpdCmdFake(-1, tg.NewCmd("mv_to_chk", []string{"7b72407ca70", "-checklist1-"})))
 	r.Nil(err)
 
@@ -351,9 +353,16 @@ func TestAddMultipleItemsToChecklist(t *testing.T) {
 	r.ElementsMatch([]string{"Item.md", "Item2.md", "Item3.md"}, []string{files[0].Name, files[1].Name, files[2].Name})
 }
 
-func TestBot_Pomodoro(t *testing.T) {
+func TestBot_togglePomodoro(t *testing.T) {
 	r := require.New(t)
-	b := initFakeBot(r)
+	fsys, err := fs.NewFS(-1, afero.NewMemMapFs())
+	r.Nil(err)
+	tgram := fake.NewTG()
+	redis, err := miniredis.Run()
+	r.Nil(err)
+	defer redis.Close()
+	b2 := NewBot(-1, tgram, fsys, db.NewDB(redis), &userconfig.DefaultConfig)
+	b := b2
 
 	pomodoroIn := func(dirName string) bool {
 		hasPomodoroInDir, err := b.fs.Exists(dirName, fs.FilePomodoro)
@@ -378,16 +387,45 @@ func TestBot_Pomodoro(t *testing.T) {
 	// and remove pomodoro from trash
 	r.Nil(b.togglePomodoro(nil))
 	r.False(pomodoroIn(fs.DirToday) || pomodoroIn(fs.DirTrash))
-
 }
 
-func initFakeBot(r *require.Assertions) *Bot {
-	fsys, err := fs.NewFS(-1, afero.NewMemMapFs())
+func TestBot_pomodoroCompletion(t *testing.T) {
+	r := require.New(t)
+	fsBackend := afero.NewMemMapFs()
+	t.Setenv("ADMIN_USER_ID", "-1")
+	fsys, err := fs.NewFS(-1, fsBackend)
 	r.Nil(err)
 	tgram := fake.NewTG()
 	redis, err := miniredis.Run()
 	r.Nil(err)
 	defer redis.Close()
-	b := NewBot(-1, tgram, fsys, db.NewDB(redis))
-	return b
+	b := NewBot(-1, tgram, fsys, db.NewDB(redis), &userconfig.DefaultConfig)
+
+	pomodoroIn := func(dirName string) bool {
+		hasPomodoroInDir, err := b.fs.Exists(dirName, fs.FilePomodoro)
+		r.Nil(err)
+		return hasPomodoroInDir
+	}
+	r.False(pomodoroIn(fs.DirToday) || pomodoroIn(fs.DirTrash))
+
+	// Add pomodoro	to today
+	r.Nil(b.togglePomodoro(nil))
+	r.True(pomodoroIn(fs.DirToday) && !pomodoroIn(fs.DirTrash))
+	// set pomodoro duration to 100ms
+	b.conf.PomodoroDuration = "1s"
+	// complete it
+	r.Nil(b.complete([]string{fs.DirToday, fs.FilePomodoro}))
+	r.True(!pomodoroIn(fs.DirToday) && pomodoroIn(fs.DirTrash))
+
+	// wait less than pomodoro duration
+	time.Sleep(100 * time.Millisecond)
+	err = worker.MoveDueTasksToToday(redis, fsBackend)
+	r.Nil(err)
+	r.True(!pomodoroIn(fs.DirToday) && pomodoroIn(fs.DirTrash))
+
+	// wait until it gets back to today
+	time.Sleep(900 * time.Millisecond)
+	err = worker.MoveDueTasksToToday(redis, fsBackend)
+	r.Nil(err)
+	r.True(pomodoroIn(fs.DirToday) && !pomodoroIn(fs.DirTrash))
 }

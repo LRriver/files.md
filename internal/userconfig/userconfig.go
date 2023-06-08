@@ -13,11 +13,14 @@ type Config struct {
 	Language            string   `json:"language"`
 	HomeCmd             string   `json:"homeCmd"`
 	MoveToConfigButtons []string `json:"moveToButtons"`
+	PomodoroDuration    string   `json:"pomodoroDuration"`
 }
 
 var DefaultConfig = Config{
+	Language:            "en",
 	HomeCmd:             "today",
 	MoveToConfigButtons: []string{"tomorrow", "later", "day", "note", "checklist", "doc", "recent", "journal"},
+	PomodoroDuration:    "25m",
 }
 
 var TasksOnlyConfig = Config{
@@ -30,8 +33,8 @@ var NotesOnlyConfig = Config{
 	MoveToConfigButtons: []string{"##NOTE_DIRS##"},
 }
 
-func NewConfig() Config {
-	return Config{}
+func NewConfig() *Config {
+	return &Config{}
 }
 
 // TODO add file creation
