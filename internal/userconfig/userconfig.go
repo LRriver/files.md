@@ -44,7 +44,7 @@ type Config struct {
 type raw struct {
 	Language               string   `json:"language"`
 	HomeCmd                string   `json:"homeCmd"`
-	MoveToCommands         []string `json:"moveToButtons"`
+	MoveToCommands         []string `json:"moveToCommands"`
 	PomodoroDurationMinute float64  `json:"pomodoroDurationMinute"`
 }
 

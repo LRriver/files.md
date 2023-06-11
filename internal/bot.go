@@ -364,7 +364,6 @@ func (b *Bot) showMove(params []string) error {
 		i18n.StrToNote:      tg.NewCmd(cmdShowToNote, []string{filenameHash}),
 		i18n.StrToChecklist: tg.NewCmd(cmdShowToChecklist, []string{filenameHash}),
 		i18n.StrToDoc:       tg.NewCmd(cmdShowToDoc, []string{filenameHash}),
-		i18n.StrGoToToday:   tg.NewCmd(cmdShowToday, nil),
 	}
 
 	var kb tg.Keyboard
@@ -378,7 +377,7 @@ func (b *Bot) showMove(params []string) error {
 
 		kb.AddRow(tg.NewBtn(b.tr(userCmd), cmd))
 	}
-	fmt.Printf("%v", userCmds)
+	kb.AddRow(tg.NewBtn(i18n.StrBtnGoToToday, tg.NewCmd(cmdShowToday, nil)))
 
 	b.delAllKeyboards()
 	err := b.show(b.tr("Task added for <b>today</b>!"), &kb, tg.MarkupHTML)
