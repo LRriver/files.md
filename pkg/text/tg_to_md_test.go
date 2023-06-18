@@ -104,7 +104,7 @@ func TestEmoji(t *testing.T) {
 
 	text := "👍b"
 	var messageEntities = []tgbotapi.MessageEntity{
-		{Type: "bold", Offset: 2, Length: 1},
+		{Type: "bold", Offset: 2, Length: 1}, // Emoji is 4 bytes or 2 runes
 	}
 
 	md := EntitiesToMarkdown(text, messageEntities)
@@ -116,7 +116,7 @@ func TestSkinEmoji(t *testing.T) {
 
 	text := "🤘🏾b"
 	var messageEntities = []tgbotapi.MessageEntity{
-		{Type: "bold", Offset: 4, Length: 1},
+		{Type: "bold", Offset: 4, Length: 1}, // Tone emoji is 8 bytes or 4 runes
 	}
 
 	md := EntitiesToMarkdown(text, messageEntities)

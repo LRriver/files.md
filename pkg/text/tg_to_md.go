@@ -18,7 +18,7 @@ func init() {
 	}
 }
 
-// EntitiesToMarkdown converts plain text with Telegram entities to CommonMark Markdown.
+// EntitiesToMarkdown converts plain text with Telegram entities (with UTF-16 offsets) to CommonMark Markdown.
 // Telegram's formatting entities don't take the new lines into account. I.e. if we have a multiline
 // bold text, it would be referred as a single bold entity, which is not what we want. This function
 // inserts the necessary closing tags before the new lines and opening tags after the new lines.
