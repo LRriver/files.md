@@ -414,7 +414,8 @@ func TestBot_pomodoroCompletion(t *testing.T) {
 	r.Nil(b.togglePomodoro(nil))
 	r.True(pomodoroIn(fs.DirToday) && !pomodoroIn(fs.DirArchive))
 	// set pomodoro duration to 100ms
-	b.conf.SetPomodoroDuration(time.Second)
+	err = b.conf.SetPomodoroDuration(2 * time.Second)
+	r.Nil(err)
 	// complete it
 	r.Nil(b.complete([]string{fs.DirToday, fs.FilePomodoro}))
 	r.True(!pomodoroIn(fs.DirToday) && pomodoroIn(fs.DirArchive))
@@ -426,7 +427,7 @@ func TestBot_pomodoroCompletion(t *testing.T) {
 	r.True(!pomodoroIn(fs.DirToday) && pomodoroIn(fs.DirArchive))
 
 	// wait until it gets back to today
-	time.Sleep(900 * time.Millisecond)
+	time.Sleep(2500 * time.Millisecond)
 	err = worker.MoveDueTasksToToday(redis, fsBackend)
 	r.Nil(err)
 	r.True(pomodoroIn(fs.DirToday) && !pomodoroIn(fs.DirArchive))
