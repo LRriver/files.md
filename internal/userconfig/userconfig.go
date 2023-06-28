@@ -15,6 +15,8 @@ import (
 	"zakirullin/stuffbot/i18n"
 )
 
+var DefaultFS = afero.NewOsFs()
+
 var DefaultConfig = Config{ // TODO apply default config if some fields are missing
 	raw: raw{
 		Language:               "en",
@@ -38,8 +40,6 @@ var NotesOnlyConfig = Config{
 		MoveToCommands: []string{"##NOTE_DIRS##"},
 	},
 }
-
-var DefaultBackend = afero.NewOsFs()
 
 type Config struct {
 	raw
@@ -65,7 +65,7 @@ func NewConfig() *Config {
 }
 
 func (c *Config) LoadOrCreate(path string) error {
-	exists, err := afero.Exists(DefaultBackend, path)
+	exists, err := afero.Exists(DefaultFS, path)
 	if err != nil {
 		return fmt.Errorf("config load: %w", err)
 	}
@@ -100,7 +100,7 @@ func (c *Config) Save(path string) error { // TODO add lazy saving, save only if
 		return fmt.Errorf("config save: can't marshal config: %w", err)
 	}
 
-	err = afero.WriteFile(DefaultBackend, path, bytes, 0644)
+	err = afero.WriteFile(DefaultFS, path, bytes, 0644)
 	if err != nil {
 		return fmt.Errorf("config save: can't write config file: %w", err)
 	}
