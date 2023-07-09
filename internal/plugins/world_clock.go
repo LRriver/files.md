@@ -42,10 +42,10 @@ func loadLocation(name string) *time.Location {
 
 type WorldClockPlugin struct {
 	userID int64
-	tg     tg.TGInterface
+	tg     TGInterface
 }
 
-func NewWorldClockPlugin(userID int64, tg tg.TGInterface) *WorldClockPlugin {
+func NewWorldClockPlugin(userID int64, tg TGInterface) *WorldClockPlugin {
 	return &WorldClockPlugin{userID, tg}
 }
 
