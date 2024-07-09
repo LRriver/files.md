@@ -180,6 +180,7 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		constants.CmdConfigurePanel:     b.showConfigureQuickPanel,
 		constants.CmdAddToPanel:         b.addToPanel,
 		constants.CmdDelFromPonel:       b.delFromPanel,
+		constants.CmdDoNothing:          func(s []string) error { return nil },
 	}
 }
 
@@ -400,24 +401,13 @@ func (b *Bot) show(text string, kb *tg.Keyboard, markup string) error {
 func (b *Bot) showMove(params []string) error {
 	filenameHash := params[0]
 
-	availableCmds := map[string]tg.Cmd{
-		i18n.StrForTomorrow: tg.NewCmd(constants.CmdSchedule, []string{filenameHash, txt.I64(sched.Tomorrow()), ""}),
-		i18n.StrForLater:    tg.NewCmd(constants.CmdMove, []string{fs.DirToday, filenameHash, "later"}),
-		i18n.StrForDay:      tg.NewCmd(constants.CmdShowChooseDay, []string{filenameHash}),
-		i18n.StrToFile:      tg.NewCmd(constants.CmdShowToFile, []string{filenameHash}),
-		i18n.StrToChecklist: tg.NewCmd(constants.CmdShowToChecklist, []string{filenameHash}),
-		i18n.StrToJournal:   tg.NewCmd(constants.CmdMoveJournal, []string{fs.DirToday, filenameHash}),
-	}
-
-	var btns []tg.Btn
-	userCmdNames := b.conf.MoveToCmds()
-	for _, userCmdName := range userCmdNames {
-		cmd, ok := availableCmds[userCmdName]
-		if !ok {
-			// TODO rem unsupported cmd?
-			continue
-		}
-		btns = append(btns, tg.NewBtn(userCmdName, cmd))
+	btns := []tg.Btn{
+		tg.NewBtn(i18n.StrForTomorrow, tg.NewCmd(constants.CmdSchedule, []string{filenameHash, txt.I64(sched.Tomorrow()), ""})),
+		tg.NewBtn(i18n.StrForLater,    tg.NewCmd(constants.CmdMove, []string{fs.DirToday, filenameHash, "later"})),
+		tg.NewBtn(i18n.StrForDay,      tg.NewCmd(constants.CmdShowChooseDay, []string{filenameHash})),
+		tg.NewBtn(i18n.StrToFile,      tg.NewCmd(constants.CmdShowToFile, []string{filenameHash})),
+		tg.NewBtn(i18n.StrToChecklist, 	tg.NewCmd(constants.CmdShowToChecklist, []string{filenameHash})),
+		tg.NewBtn(i18n.StrToJournal,   tg.NewCmd(constants.CmdMoveJournal, []string{fs.DirToday, filenameHash})),
 	}
 
 	var kb tg.Keyboard
@@ -1153,6 +1143,10 @@ func (b *Bot) showToFile(params []string) error {
 	if err != nil {
 		return fmt.Errorf("to file dialog: %w", err)
 	}
+	shouldAddSeparator := len(fileBtns) > 0
+	if shouldAddSeparator {
+		kb.AddRow(tg.NewBtn("Or choose a file:", tg.NewCmd(constants.CmdDoNothing, nil)))
+	}
 	fileBtnsByRows := slice.Chunk(fileBtns, btnsPerRow)
 	for _, row := range fileBtnsByRows {
 		kb.AddRow(row)
@@ -1163,7 +1157,7 @@ func (b *Bot) showToFile(params []string) error {
 		return fmt.Errorf("to file dialog: %w", err)
 	}
 
-	err = b.show("🗂 Where to save your text?", kb, tg.MarkupHTML)
+	err = b.show("🗂 Choose a dir or name a new one:", kb, tg.MarkupHTML)
 	if err != nil {
 		return fmt.Errorf("to file dialog: %w", err)
 	}

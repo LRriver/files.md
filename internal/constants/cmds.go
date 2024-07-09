@@ -2,6 +2,7 @@ package constants
 
 const (
 	CmdShowStart          = "start"
+	CmdDoNothing          = "nothing"
 	CmdShowLater          = "later"
 	CmdShowToday          = "today"
 	CmdShowNotes          = "notes"
