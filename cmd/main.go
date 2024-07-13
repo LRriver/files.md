@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strconv"
 	"time"
 
 	"github.com/alicebob/miniredis/v2"
@@ -103,9 +104,25 @@ func main() {
 	// TODO graceful shutdown etc
 	go func() {
 		router := http.NewServeMux()
-		router.HandleFunc("GET /habits/{id}", func(w http.ResponseWriter, r *http.Request) {
-			_ = r.PathValue("id")
-			str, _ := habits.Render()
+		router.HandleFunc("GET /habits/{userID}", func(w http.ResponseWriter, r *http.Request) {
+			userID, err := strconv.ParseInt(r.PathValue("userID"), 10, 64)
+			if err != nil {
+				// TODO
+				w.Write([]byte("err"))
+			}
+
+			userPath := path.Join(conf.StoragePath, txt.I64(userID))
+			userFS, err := fs.NewFS(userPath, afero.NewOsFs())
+			if err != nil {
+				// TODO
+				w.Write([]byte("can't init user fs"))
+			}
+
+			str, err := habits.Render(userFS)
+			if err != nil {
+				// TODO
+				w.Write([]byte(err.Error()))
+			}
 			w.Write(str)
 		})
 

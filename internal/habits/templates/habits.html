@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link href="./styles.css" rel="stylesheet">
     <title>Habits</title>
     <style>
         html {
@@ -93,22 +92,30 @@
 
         tr:first-child td { border-top-style: solid; }
         tr td:first-child { border-left-style: solid; }
+
+        tr td.day:not(:first-child) {
+            font-size: 0;
+        }
     </style>
 </head>
 <body>
 <div class="container">
 <table>
     <tbody>
+        {{ range $habit, $year := . }}
+            <tr>
+                {{ range $day, $status := .}}
+                    <td data-habit="<?= UrlHelper::base64Encode($habit) ?>" class="day {{ if eq $status 1 }} checked {{ end }}"><div class="text">{{$habit}}</div></td>
+                {{ end }}
+            </tr>
+        {{ end }}
     <tr>
-        <td data-habit="<?= UrlHelper::base64Encode($habit) ?>" class="<?= $dayAndStatus[0] == true ? 'checked' : '' . (0 == $day ? ' today ' : '');?>"><div class="text"><?= $habitStr ?></div></td>
-    </tr>
-
-    <tr>
-        <td class="emoji <?= $emojis[0] > 0 ? 'checked' : ''; ?>"></td>
-    </tr>
-
-    <tr>
-        <td></td>
+        <td class="emoji today_emoji" data-power="1">🤕</td>
+        <td class="emoji today_emoji" data-power="1">🤕</td>
+        <td class="emoji today_emoji" data-power="1">🤕</td>
+        <td class="emoji today_emoji" data-power="1">🤕</td>
+        <td class="emoji today_emoji" data-power="1">🤕</td>
+        <td class="emoji today_emoji" data-power="1">🤕</td>
         <td class="emoji today_emoji" data-power="1">🤕</td>
     </tr>
     </tbody>
