@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"slices"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -167,22 +166,26 @@ func Write(userFS *fs.FS, year int, habits map[string]Year) error {
 	content := ""
 	day := time.Date(year, time.January, 1, 0, 0, 0, 0, time.UTC)
 	for day.Year() < year+1 {
+		// Generating all habits for a month
 		habitsForMonth := ""
-		for _, habitKey := range habitKeys {
-			dayOfMonth := day
+		for _, habitName := range habitKeys {
 			statuses := ""
+			dayOfMonth := day
 			atLeastOneCompletion := false
 			for dayOfMonth.Month() == day.Month() {
-				if status, ok := habits[habitKey][dayOfMonth.YearDay()]; ok {
-					statuses += strconv.Itoa(status)
-					atLeastOneCompletion = true
-				} else {
-					statuses += habitSkipped
+				emoji := habitSkipped
+				if status, ok := habits[habitName][dayOfMonth.YearDay()]; ok {
+					emoji = emojiForStatus(habitName, dayOfMonth, status)
 				}
+				if emoji != habitSkipped {
+					atLeastOneCompletion = true
+				}
+				statuses += emoji
+
 				dayOfMonth = dayOfMonth.AddDate(0, 0, 1)
 			}
 			if atLeastOneCompletion {
-				habitsForMonth += fmt.Sprintf("%s %s\n", statuses, habitKey)
+				habitsForMonth += fmt.Sprintf("%s %s\n", statuses, habitName)
 			}
 		}
 
@@ -200,6 +203,27 @@ func Write(userFS *fs.FS, year int, habits map[string]Year) error {
 	}
 
 	return nil
+}
+
+func emojiForStatus(habitName string, day time.Time, status int) string {
+	if habitName == mood {
+		if status < len(moodEmojis) {
+			return moodEmojis[status]
+		}
+
+		return habitSkipped
+	}
+
+	if status == 1 {
+		isWeekend := day.Weekday() == time.Saturday || day.Weekday() == time.Sunday
+		if isWeekend {
+			return habitCompletedAtWeekend
+		} else {
+			return habitCompleted
+		}
+	} 
+
+	return habitSkipped
 }
 
 // func dayOfYearToTime(dayOfYear int, year int) time.Time {

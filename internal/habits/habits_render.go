@@ -18,9 +18,6 @@ func Render(userFS *fs.FS) ([]byte, error) {
 		return nil, fmt.Errorf("can't parse habits template: %w", err)
 	}
 
-	h, _ := Habits(userFS, 2024)
-	_ = Write(userFS, 2024, h)
-
 	habits, err := LastWeekHabits(userFS)
 	if err != nil {
 		return nil, fmt.Errorf("can't render habit: %w", err)
