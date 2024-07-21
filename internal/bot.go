@@ -119,7 +119,8 @@ func (b *Bot) Answer(u UpdInterface) error {
 		return nil
 	}
 
-	// Currently used for showing files
+	// Show file requested from inline query
+	// TODO write tests for all sorts of tricky input with ../
 	if u.IsSentViaBot() {
 		dirAndFilename := strings.Split(u.MsgText(), "/")
 		var dir, filename string
@@ -130,7 +131,7 @@ func (b *Bot) Answer(u UpdInterface) error {
 			dir = dirAndFilename[0]
 			filename = dirAndFilename[1]
 		} else {
-			// TODO err
+			// TODO err?
 			return fmt.Errorf("answer: can't parse file path from sent via bot msg")
 		}
 
@@ -153,7 +154,7 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		constants.CmdShowToday:          b.showToday,
 		constants.CmdShowLater:          b.showLater,
 		constants.CmdShowNotes:          b.showNotes,
-		constants.CmdShowFiles:          b.showDocs,
+		constants.CmdShowFiles:          b.showFiles,
 		constants.CmdShowChecklists:     b.showChecklists,
 		constants.CmdShowPostpone:       b.showPostpone,
 		constants.CmdShowRename:         b.showRename,
@@ -311,16 +312,18 @@ func (b *Bot) search(u UpdInterface) error {
 
 	var results []interface{}
 	for id, note := range matchedNotes {
-		path := fmt.Sprintf("%s/%s", note.ParentDir, note.Name)
+		path := fmt.Sprintf("<code>%s/%s</code>", note.ParentDir, note.Name)
 		if note.ParentDir == fs.DirRoot {
 			path = note.Name
 		}
-		results = append(results, tgbotapi.NewInlineQueryResultArticle(strconv.Itoa(id), note.Title, path))
+		article := tgbotapi.NewInlineQueryResultArticleHTML(strconv.Itoa(id), note.Title, path)
+		results = append(results, article)
 	}
 
 	queryID, _ := u.InlineQueryID()
 	err = b.tg.AnswerInlineQuery(queryID, results, inlineResultsCacheTime, "")
-	if err != nil {
+	// TG library has a bug of unmarshalling sent result, we'll mute that temporarely
+	if err != nil && !strings.HasSuffix(err.Error(), "Go value of type tgbotapi.Message") {
 		return fmt.Errorf("inline reply: %w", err)
 	}
 
@@ -448,7 +451,7 @@ func (b *Bot) quickPanelRow() []tg.Btn {
 				params = []string{habitsUrl}
 			}
 
-			button := tg.NewBtn(btn.Emoji, tg.NewTypedCmd(btn.Cmd, params, btn.CmdType))
+			button := tg.NewBtn(btn.Emoji, tg.NewCustomCmd(btn.Cmd, params, btn.CmdType))
 			quickPanelRow = append(quickPanelRow, button)
 		}
 	}
@@ -538,24 +541,45 @@ func (b *Bot) showNotes(params []string) error {
 	return nil
 }
 
-func (b *Bot) showDocs(params []string) error {
+func (b *Bot) showFiles(params []string) error {
 	files, err := b.fs.FilesAndDirs(fs.DirRoot)
 	if err != nil {
 		return fmt.Errorf("show docs: can't get dirs: %w", err)
 	}
-	files = fs.OnlyFiles(files)
+
+	dirs := fs.OnlyNoteDirs(fs.OnlyDirs(files))
+	var dirBtns []tg.Btn
+	for _, dir := range dirs {
+		cmd := tg.NewCustomCmd("", []string{dir.Name}, tg.CmdTypeInlineQueryCurrentChat)
+		btn := tg.NewBtn(fmt.Sprintf("📂 %s", dir.Title), cmd)
+		dirBtns = append(dirBtns, btn)
+	}
 
 	var kb tg.Keyboard
-	for _, file := range files {
-		cmd := tg.NewCmd(constants.CmdShowFile, []string{fs.Hash(file.Name)})
-		btn := tg.NewBtn(file.Title, cmd)
+	dirBtnsByRows := slice.Chunk(dirBtns, btnsPerRow)
+	for _, row := range dirBtnsByRows {
+		kb.AddRow(row)
+	}
+	shouldAddSeparator := len(dirs) > 0 && len(files) > 0
+	if shouldAddSeparator {
+		kb.AddRow(tg.NewBtn("-", tg.NewCmd(constants.CmdDoNothing, nil)))
+	}
 
-		kb.AddRow(btn)
+	files = fs.OnlyFiles(files)
+	var fileBtns []tg.Btn
+	for _, file := range files {
+		cmd := tg.NewCmd(constants.CmdShowFile, []string{fs.DirRoot, fs.Hash(file.Name)})
+		btn := tg.NewBtn(fmt.Sprintf("📄 %s", file.Title), cmd)
+		fileBtns = append(fileBtns, btn)
+	}
+	fileBtnsByRows := slice.Chunk(fileBtns, btnsPerRow)
+	for _, row := range fileBtnsByRows {
+		kb.AddRow(row)
 	}
 
 	kb.AddRow(tg.NewBtn(i18n.StrBtnToday, tg.NewCmd(constants.CmdShowToday, nil)))
 
-	err = b.show(b.tr("📝 Your docs:"), &kb, tg.MarkupHTML)
+	err = b.show(b.tr("📄 Your files:"), &kb, tg.MarkupHTML)
 	if err != nil {
 		return fmt.Errorf("show docs: %w", err)
 	}
@@ -771,16 +795,22 @@ func (b *Bot) showTask(params []string) error {
 }
 
 func (b *Bot) showFile(params []string) error {
-	filenameHash := params[0]
+	dirHash := params[0]
+	filenameHash := params[1]
 
-	filename, err := b.fs.Unhash(fs.DirRoot, filenameHash)
+	dir, err := b.fs.Unhash(fs.DirRoot, dirHash)
 	if err != nil {
-		return fmt.Errorf("show doc: %w", err)
+		return fmt.Errorf("show file: %w", err)
 	}
 
-	content, err := b.fs.Read(fs.DirRoot, filename)
+	filename, err := b.fs.Unhash(dir, filenameHash)
 	if err != nil {
-		return fmt.Errorf("show doc: : %w", err)
+		return fmt.Errorf("show file: %w", err)
+	}
+
+	content, err := b.fs.Read(dir, filename)
+	if err != nil {
+		return fmt.Errorf("show file: : %w", err)
 	}
 
 	kb := tg.NewKeyboard([]tg.Row{
@@ -789,7 +819,7 @@ func (b *Bot) showFile(params []string) error {
 
 	err = b.show(fmt.Sprintf("%s\n%s", fs.Title(filename), content), kb, tg.MarkupHTML)
 	if err != nil {
-		return fmt.Errorf("show doc: %w", err)
+		return fmt.Errorf("show file: %w", err)
 	}
 
 	return nil

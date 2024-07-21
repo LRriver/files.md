@@ -36,7 +36,7 @@ func NewCmd(name string, params []string) Cmd {
 	return Cmd{name, params, "cmd"}
 }
 
-func NewTypedCmd(name string, params []string, cmdType string) Cmd {
+func NewCustomCmd(name string, params []string, cmdType string) Cmd {
 	return Cmd{name, params, cmdType}
 }
 

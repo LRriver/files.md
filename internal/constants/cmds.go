@@ -42,6 +42,7 @@ const (
 	CmdShowShopChecklist  = "shop"
 
 	CmdInlineQuerySearchEveryWhere = "search"
+	CmdInlineQuerySearchInDir      = "search_dir"
 
 	CmdWebAppHabits = "habits"
 )
