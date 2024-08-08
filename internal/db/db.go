@@ -61,7 +61,7 @@ func (db *DB) SetFilenameByMsgID(userID int64, msgID int, filename string) {
 	filenameByMsgID.Store(filenameByMsgIDKey(userID, msgID), filename)
 }
 
-func (db *DB) filenameByMsgID(userID int64, msgID int) string {
+func (db *DB) FilenameByMsgID(userID int64, msgID int) string {
 	filename, _ := filenameByMsgID.Load(filenameByMsgIDKey(userID, msgID))
 
 	return filename.(string)

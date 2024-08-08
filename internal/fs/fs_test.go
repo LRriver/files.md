@@ -418,3 +418,11 @@ func TestUnhashRootDirectory(t *testing.T) {
 
 	r.Equal("", unhashed)
 }
+
+func TestSanitizeFilename(t *testing.T) {
+	r := require.New(t)
+
+	r.Equal("ab", SanitizeFilename("a\x00b"))
+	r.Equal("a{|}b", SanitizeFilename("a/b"))
+	r.Equal("a{||}b", SanitizeFilename("a\\b"))
+}

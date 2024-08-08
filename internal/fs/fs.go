@@ -45,7 +45,9 @@ const (
 	FilePomodoro = "Took a break.md"
 	FileConfig   = "config.json"
 
-	minSearchSimilarity = 70
+	minSearchSimilarity  = 70
+	escapedForwardSlash  = "{|}"
+	escapedBackwardSlash = "{||}"
 )
 
 // FS allows us to manipulate user files. We can use different
@@ -499,6 +501,24 @@ func (fs FS) Path(dir, filename string) string {
 	p := path.Join(fs.rootPath, dir, filename)
 
 	return p
+}
+
+func SanitizeFilename(filename string) string {
+	// Under Linux and other Unix-related systems,
+	// there are only two characters that cannot
+	// appear in the name of a file or directory,
+	// and those are NUL '\0' and slash '/'.
+	// For Windows we only handle '\',
+	// consider sanitazing other characters
+	filename = strings.ReplaceAll(filename, "\x00", "")
+	filename = strings.ReplaceAll(filename, "/", escapedForwardSlash)
+	filename = strings.ReplaceAll(filename, "\\", escapedBackwardSlash)
+
+	return filename
+}
+
+func UnsanitizeFilename(filename string) string {
+	return ""
 }
 
 func Title(filename string) string {

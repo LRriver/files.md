@@ -14,7 +14,6 @@ import (
 	"zakirullin/stuffbot/config"
 	"zakirullin/stuffbot/i18n"
 	"zakirullin/stuffbot/internal/constants"
-	"zakirullin/stuffbot/internal/db"
 	"zakirullin/stuffbot/internal/fs"
 	"zakirullin/stuffbot/internal/journal"
 	"zakirullin/stuffbot/internal/plugins"
@@ -65,6 +64,18 @@ type TGInterface interface {
 	AnswerInlineQuery(queryID string, results []interface{}, cacheTime int, offset string) error
 }
 
+type DBInterface interface {
+	LastKeyboardMsgID(userID int64) int
+	SetLastKeyboardMsgID(userID int64, ID int)
+	DelLastKeyboardMsgID(userID int64)
+	InputExpectation(userID int64) *tg.Cmd
+	SetInputExpectation(userID int64, cmd tg.Cmd)
+	DelInputExpectation(userID int64)
+	SetFilenameByMsgID(userID int64, msgID int, filename string)
+	FilenameByMsgID(userID int64, msgID int) string
+	SetDirByMsgID(userID int64, msgID int, filename string)
+}
+
 // Bot provides commands that can be invoked by a user so to query
 // server files and database. A user can also send all sort of things
 // to bot (texts, photos) - in that case we'd save everything.
@@ -72,7 +83,7 @@ type Bot struct {
 	userID int64
 	tg     TGInterface
 	fs     *fs.FS
-	db     *db.DB
+	db     DBInterface
 	conf   *userconfig.Config
 }
 
@@ -82,7 +93,7 @@ type BotPluginInterface interface {
 
 var now = time.Now
 
-func NewBot(userID int64, tg TGInterface, fs *fs.FS, db *db.DB, conf *userconfig.Config) *Bot {
+func NewBot(userID int64, tg TGInterface, fs *fs.FS, db DBInterface, conf *userconfig.Config) *Bot {
 	botPlugins = append(botPlugins,
 		plugins.NewWorldClockPlugin(userID, tg),
 	)
@@ -396,7 +407,7 @@ func (b *Bot) tr(str string, args ...any) string {
 // Or show the new one (in case of photo)
 func (b *Bot) show(text string, kb *tg.Keyboard, markup string) error {
 	mid := b.db.LastKeyboardMsgID(b.userID)
-
+	fmt.Printf("MID %d\n", mid)
 	textChunks := txt.SplitTextIntoChunks(text, maxMsgLength)
 	if mid == 0 || len(textChunks) > 1 {
 		b.delAllKeyboards()
