@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -299,23 +300,17 @@ func (b *Bot) saveFromRegularMsg(u UpdInterface) error {
 
 func (b *Bot) saveFromPhoto(u UpdInterface) error {
 	photoID, _ := u.PhotoOrImageID()
-	imgFile, err := b.fs.TmpFile(fs.DirImg, photoID)
-	if err != nil {
-		return fmt.Errorf("can't create temp file: %w", err)
-	}
-	defer imgFile.Close()
 
-	extension, err := b.tg.DownloadFile(photoID, imgFile)
+	var buf bytes.Buffer
+	extension, err := b.tg.DownloadFile(photoID, &buf)
 	if err != nil {
-		_ = imgFile.Close()
-		_ = b.fs.Del(fs.DirImg, photoID)
 		return fmt.Errorf("can't download file: %w", err)
 	}
 
 	imgFilename := fmt.Sprintf("tg_%s%s", photoID, extension)
-	err = b.fs.Rename(fs.DirImg, photoID, fs.DirImg, imgFilename)
+	err = b.fs.Write(fs.DirImg, imgFilename, buf.String())
 	if err != nil {
-		return fmt.Errorf("can't rename tmp image: %w", err)
+		return fmt.Errorf("can't save photo: %w", err)
 	}
 
 	imgPath := fmt.Sprintf("../%s/%s", fs.DirImg, imgFilename)

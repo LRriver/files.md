@@ -9,8 +9,6 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io"
-	"os"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -193,29 +191,6 @@ func (fs FS) MakeDir(dir string) error {
 	}
 
 	return nil
-}
-
-// TmpFile creates a temporary file in the specified directory.
-// Not all operating systems or file systems support moving a file atomically
-// from different directories or volumes.
-// This problem, for example, occurs with k8s or docker where
-// the temporary path may be in a different volume than the target path.
-func (fs FS) TmpFile(dir, filename string) (io.WriteCloser, error) {
-	filePath := fs.UnsafePath(dir, filename)
-	isSafe, err := fs.isSafe(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("fs temp img file: check if file is safe to access '%s': %w", filePath, err)
-	}
-	if !isSafe {
-		return nil, fmt.Errorf("fs temp img file: unsafe path '%s': %w", filePath, errUnsafePath)
-	}
-
-	outFile, err := fs.backend.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
-	if err != nil {
-		return nil, fmt.Errorf("fs can't create temp file: %w", err)
-	}
-
-	return outFile, nil
 }
 
 func (fs FS) Del(dir, filename string) error {
