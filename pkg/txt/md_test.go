@@ -27,7 +27,7 @@ func TestMarkdownToHtmlBold(t *testing.T) {
 	r := require.New(t)
 
 	md := "**bold**"
-	html := MarkdownToHtml(md)
+	html := Html(md)
 
 	r.Equal("<b>bold</b>", html)
 }
@@ -36,7 +36,7 @@ func TestMarkdownToHtmlMultilineBold(t *testing.T) {
 	r := require.New(t)
 
 	md := "**bold\nstill bold**"
-	html := MarkdownToHtml(md)
+	html := Html(md)
 
 	r.Equal("<b>bold\nstill bold</b>", html)
 }
@@ -54,20 +54,20 @@ func TestMarkdownToHtmlNewLineChar(t *testing.T) {
 	r := require.New(t)
 
 	bold := "**\n**"
-	r.Equal("<b>\n</b>", MarkdownToHtml(bold))
+	r.Equal("<b>\n</b>", Html(bold))
 
 	italic := "*\n*"
-	r.Equal("<i>\n</i>", MarkdownToHtml(italic))
+	r.Equal("<i>\n</i>", Html(italic))
 }
 
 func TestMarkdownToHtmlCharAndNewLineChar(t *testing.T) {
 	r := require.New(t)
 
 	bold := "**a\n**"
-	r.Equal("<b>a\n</b>", MarkdownToHtml(bold))
+	r.Equal("<b>a\n</b>", Html(bold))
 
 	italic := "*a\n*"
-	r.Equal("<i>a\n</i>", MarkdownToHtml(italic))
+	r.Equal("<i>a\n</i>", Html(italic))
 
 }
 
@@ -75,10 +75,10 @@ func TestMarkdownToHtmlNewLineAndChar(t *testing.T) {
 	r := require.New(t)
 
 	bold := "**\na**"
-	r.Equal("<b>\na</b>", MarkdownToHtml(bold))
+	r.Equal("<b>\na</b>", Html(bold))
 
 	italic := "*\na*"
-	r.Equal("<i>\na</i>", MarkdownToHtml(italic))
+	r.Equal("<i>\na</i>", Html(italic))
 }
 
 //func TestMarkdownToHtmlTwoNewlinesBreakFormatting(t *testing.T) {
@@ -95,7 +95,7 @@ func TestMarkdownToHtmlMultilineBoldAndItalic(t *testing.T) {
 	r := require.New(t)
 
 	md := "Some _italic text\nin two lines_, **bold text\nin two lines**, and ***bold italic text\nin two lines***."
-	html := MarkdownToHtml(md)
+	html := Html(md)
 
 	r.Equal("Some <i>italic text\nin two lines</i>, <b>bold text\nin two lines</b>, and <b><i>bold italic text\nin two lines</i></b>.", html)
 }
@@ -104,7 +104,7 @@ func TestMarkdownToHtmlItalic(t *testing.T) {
 	r := require.New(t)
 
 	md := "*italic*"
-	html := MarkdownToHtml(md)
+	html := Html(md)
 
 	r.Equal("<i>italic</i>", html)
 }
@@ -131,17 +131,17 @@ func TestMarkdownToHtmlBoldInsideItalic(t *testing.T) {
 	r := require.New(t)
 
 	md := "*italic and __bold__*"
-	r.Equal("<i>italic and <b>bold</b></i>", MarkdownToHtml(md))
+	r.Equal("<i>italic and <b>bold</b></i>", Html(md))
 
 	md = "*italic and **bold***"
-	r.Equal("<i>italic and <b>bold</b></i>", MarkdownToHtml(md))
+	r.Equal("<i>italic and <b>bold</b></i>", Html(md))
 }
 
 func TestMarkdownToHtmlNoLists(t *testing.T) {
 	r := require.New(t)
 
 	md := "list\n1) item1\n2) item2"
-	html := MarkdownToHtml(md)
+	html := Html(md)
 
 	r.Equal("list\n1) item1\n2) item2", html)
 }
@@ -149,7 +149,7 @@ func TestMarkdownToHtmlNoLists(t *testing.T) {
 func TestMarkdownToHtmlEscapeHtml(t *testing.T) {
 	r := require.New(t)
 
-	html := MarkdownToHtml("<a> &b")
+	html := Html("<a> &b")
 
 	r.Equal("&lt;a&gt; &amp;b", html)
 }

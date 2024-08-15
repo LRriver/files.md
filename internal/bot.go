@@ -896,7 +896,7 @@ func (b *Bot) showMultilineTask(params []string) error {
 	if err != nil {
 		return fmt.Errorf("show task: %w", err)
 	}
-	content = txt.MarkdownToHtml(content)
+	content = txt.Html(content)
 
 	var moveToBtn tg.Btn
 	btnLabel := i18n.StrBtnMoveToLater
