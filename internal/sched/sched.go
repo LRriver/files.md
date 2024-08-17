@@ -2,6 +2,7 @@ package sched
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/robfig/cron/v3"
@@ -47,13 +48,31 @@ func Next(crn string) int64 {
 }
 
 func ScheduleReport(conf *userconfig.Config) string {
-	var report string
 	scheduledTasks := conf.Schedules()
+	schedule := make(map[string][]string)
+	order := []string{}
+
+	addToSchedule := func(day string, task string) {
+		// Only add to order slice if the key is new
+		if _, exists := schedule[day]; !exists {
+			order = append(order, day)
+		}
+		schedule[day] = append(schedule[day], task)
+	}
 	for _, task := range scheduledTasks {
-		report += fmt.Sprintf("<b>%s</b>: %s\n", formatTaskDate(task.ScheduledAt), fs.Title(task.Filename))
+		addToSchedule(formatTaskDate(task.ScheduledAt), fs.Title(task.Filename))
 	}
 
-	return report
+	var report string
+	for _, day := range order {
+		report += fmt.Sprintf("<b>%s</b>\n", day)
+		for _, task := range schedule[day] {
+			report += fmt.Sprintf("- %s\n", task)
+		}
+		report += "\n"
+	}
+
+	return strings.TrimSpace(report)
 }
 
 // TODO write tests for that
@@ -69,10 +88,10 @@ func formatTaskDate(scheduledAt int64) string {
 	case diffDays == 1:
 		return "Tomorrow"
 	case diffDays > 1 && diffDays <= 6: // Nearest day
-		return taskDate.Weekday().String()
+		return taskDate.Format("Monday 02")
 	case diffDays >= 7 && diffDays <= 13:
-		return "Next " + taskDate.Weekday().String()
+		return "Next " + taskDate.Format("Monday 02")
 	default:
-		return taskDate.Format("02 January")
+		return taskDate.Format("02 January, Monday")
 	}
 }
