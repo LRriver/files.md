@@ -543,12 +543,7 @@ func (b *Bot) showMoveTo(params []string) error {
 		return b.ShowTodayTasks(nil)
 	}
 
-	userBtnsByRows := slice.Chunk(userMoveToBtns, btnsPerRow)
-	for _, row := range userBtnsByRows {
-		kb.AddRow(row)
-	}
-
-	lastRow := tg.NewRow()
+	// Add recent command if any
 	recentCmd, ok := b.db.RecentCommand(b.userID)
 	if ok {
 		args, _ := b.db.RecentCommandParams(b.userID)
@@ -561,11 +556,16 @@ func (b *Bot) showMoveTo(params []string) error {
 				icon = i18n.Emojify("dir")
 			}
 			name := fmt.Sprintf("%s %s", icon, fs.Title(unhashedTarget))
-			lastRow = append(lastRow, tg.NewBtn(name, tg.NewCmd(recentCmd, args)))
+			userMoveToBtns = append(userMoveToBtns, tg.NewBtn(name, tg.NewCmd(recentCmd, args)))
 		}
 	}
-	lastRow = append(lastRow, tg.NewBtn(i18n.StrGoToToday, tg.NewCmd(consts.CmdShowToday, nil)))
-	kb.AddRow(lastRow)
+
+	userMoveToBtns = append(userMoveToBtns, tg.NewBtn(i18n.StrGoToToday, tg.NewCmd(consts.CmdShowToday, nil)))
+
+	userBtnsByRows := slice.Chunk(userMoveToBtns, btnsPerRow)
+	for _, row := range userBtnsByRows {
+		kb.AddRow(row)
+	}
 
 	b.delAllKeyboards()
 
