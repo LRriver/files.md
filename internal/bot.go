@@ -230,7 +230,7 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		consts.CmdComplete:               b.complete,
 		consts.CmdPostpone:               b.postpone,
 		consts.CmdPomodoro:               b.togglePomodoro,
-		consts.CmdShowRecurringKB:        b.showRecurringKeyBoard,
+		consts.CmdShowRecurringKB:        b.showRecurringKeyboard,
 		consts.CmdShowSettings:           b.showSettings,
 		consts.CmdShowQuickBtnsSettings:  b.showQuickBtnsSettings,
 		consts.CmdShowMoveToBtnsSettings: b.showMoveToBtnsSettings,
@@ -1619,11 +1619,11 @@ func (b *Bot) togglePomodoro(params []string) error {
 	return b.ShowTodayTasks(nil)
 }
 
-func (b *Bot) showRecurringKeyBoard(params []string) error {
+func (b *Bot) showRecurringKeyboard(params []string) error {
 	filenameHash := params[0]
 
 	newBtn := func(name, cron string) tg.Btn {
-		return tg.NewBtn(name, tg.NewCmd(consts.CmdSchedule, []string{filenameHash, txt.I64(sched.Next(cron)), cron}))
+		return tg.NewBtn(name, tg.NewCmd(consts.CmdSchedule, []string{txt.Substr(filenameHash, 0, 4), txt.I64(sched.Next(cron)), cron}))
 	}
 
 	kb := tg.NewKeyboard([]tg.Row{
@@ -1655,7 +1655,7 @@ func (b *Bot) showRecurringKeyBoard(params []string) error {
 		kb.AddRow(row)
 	}
 
-	err := b.show("Configure schedule", kb, tg.MarkupHTML)
+	err := b.show(i18n.Tr("Configure schedule"), kb, tg.MarkupHTML)
 	if err != nil {
 		return fmt.Errorf("showRecuringKeyBoard : %w", err)
 	}
