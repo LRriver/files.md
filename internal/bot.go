@@ -519,8 +519,12 @@ func (b *Bot) createOrAdd(dir, filename, content string) error {
 		if err != nil {
 			return fmt.Errorf("create: %w", err)
 		}
+		existingContent = strings.TrimSpace(existingContent)
 
-		content = fmt.Sprintf("%s\n%s", strings.TrimSpace(existingContent), content)
+		// TODO add test, before the fix adding same file twice resulted in file with empty content and \n
+		if len(existingContent) != 0 {
+			content = fmt.Sprintf("%s\n%s", strings.TrimSpace(existingContent), content)
+		}
 	}
 
 	if err := b.fs.Write(fs.DirToday, filename, content); err != nil {
