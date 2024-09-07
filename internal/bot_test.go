@@ -1042,13 +1042,13 @@ func TestShow(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.show("text", nil)
+	err = bot.showHTML("text", nil)
 	r.NoError(err)
 
 	r.Equal("text", tgram.LastSentText)
 }
 
-func TestShowLongMessage(t *testing.T) {
+func TestShowMDLongMessage(t *testing.T) {
 	r := require.New(t)
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
@@ -1057,7 +1057,7 @@ func TestShowLongMessage(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.show(strings.Repeat("a", 4096)+"b", nil)
+	err = bot.showMD(strings.Repeat("a", 4096)+"b", nil)
 	r.NoError(err)
 
 	r.Len(tgram.SentTexts, 2)
@@ -1067,7 +1067,7 @@ func TestShowLongMessage(t *testing.T) {
 // When utf8.RuneCountInString(textChunk) == 4096, tg sends the message (len(textChunk) => 7003)
 // if I have 4095 chars and add 🟢, we have 4096 chars and it is ok
 // if I have 4095 chars and add ⚪️, we have 4097 chars and we fail, so tg doesn't operate on glyth clusters
-func TestShowLongMessageWithColoredEmojis(t *testing.T) {
+func TestShowMDLongMessageWithColoredEmojis(t *testing.T) {
 	r := require.New(t)
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
@@ -1076,13 +1076,13 @@ func TestShowLongMessageWithColoredEmojis(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.show(strings.Repeat("a", 4095)+"🟢", nil)
+	err = bot.showMD(strings.Repeat("a", 4095)+"🟢", nil)
 	r.NoError(err)
 
 	r.Len(tgram.SentTexts, 1)
 }
 
-func TestShowLongMessageWithColoredEmoji(t *testing.T) {
+func TestShowMDLongMessageWithColoredEmoji(t *testing.T) {
 	r := require.New(t)
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
@@ -1091,13 +1091,13 @@ func TestShowLongMessageWithColoredEmoji(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.show(strings.Repeat("a", 4095)+"⚪️", nil)
+	err = bot.showMD(strings.Repeat("a", 4095)+"⚪️", nil)
 	r.NoError(err)
 
 	r.Len(tgram.SentTexts, 2)
 }
 
-func TestShowLongMessageSplitByNewLine(t *testing.T) {
+func TestShowMDLongMessageSplitByNewLine(t *testing.T) {
 	r := require.New(t)
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
@@ -1106,14 +1106,14 @@ func TestShowLongMessageSplitByNewLine(t *testing.T) {
 	tgram := tg.NewFakeTG()
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-	err = bot.show(strings.Repeat("a", 4094)+"\nabc", nil)
+	err = bot.showMD(strings.Repeat("a", 4094)+"\nabc", nil)
 	r.NoError(err)
 
 	r.Len(tgram.SentTexts, 2)
 	r.Equal("abc", tgram.LastSentText)
 }
 
-func TestShowLongMessageAttachKeyboardToTheLast(t *testing.T) {
+func TestShowMDLongMessageAttachKeyboardToTheLast(t *testing.T) {
 	r := require.New(t)
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
@@ -1123,7 +1123,7 @@ func TestShowLongMessageAttachKeyboardToTheLast(t *testing.T) {
 
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
 	kb := tg.NewKeyboard([]tg.Row{tg.NewRow()})
-	err = bot.show(strings.Repeat("a", 4094)+"\nabc", kb)
+	err = bot.showMD(strings.Repeat("a", 4094)+"\nabc", kb)
 	r.NoError(err)
 
 	r.Len(tgram.SentTexts, 2)

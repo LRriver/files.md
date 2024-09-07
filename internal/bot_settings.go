@@ -22,7 +22,7 @@ func (b *Bot) showSettings(params []string) error {
 	kb.AddRow(tg.NewBtn(i18n.StrMoveToBtns, tg.NewCmd(consts.CmdShowMoveToBtnsSettings, nil)))
 	kb.AddRow(tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil)))
 
-	err := b.show("Settings:", &kb)
+	err := b.showHTML("Settings:", &kb)
 	if err != nil {
 		return fmt.Errorf("showSettings : %w", err)
 	}
@@ -79,7 +79,7 @@ func (b *Bot) showQuickBtnsSettings(params []string) error {
 	kb.AddRow(tg.NewBtn(i18n.StrBack, tg.NewCmd(consts.CmdShowSettings, nil)))
 
 	text := fmt.Sprintf("Configure quick buttons (%s = add to quick buttons, %s = to remove from quick buttons):", addBtn, delBtn)
-	err = b.show(text, &kb)
+	err = b.showHTML(text, &kb)
 	if err != nil {
 		return fmt.Errorf("configureQuickPanel : %w", err)
 	}
@@ -190,7 +190,7 @@ func (b *Bot) showMoveToBtnsSettings(params []string) error {
 	kb.AddRow(tg.NewBtn(i18n.StrBack, tg.NewCmd(consts.CmdShowSettings, nil)))
 
 	text := fmt.Sprintf("Configure quick panel (%s = add to panel, %s = to remove):", addBtn, delBtn)
-	err = b.show(text, &kb)
+	err = b.showHTML(text, &kb)
 	if err != nil {
 		return fmt.Errorf("configureQuickPanel : %w", err)
 	}

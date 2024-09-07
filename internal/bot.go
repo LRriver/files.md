@@ -219,6 +219,7 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		consts.CmdShowShopChecklist:  b.showShop,
 		consts.CmdShowSchedule:       b.showSchedule,
 		consts.CmdShowSettings:       b.showSettings,
+		consts.CmdShowHelp:           b.showHelp,
 		// Button's commands (callbacks)
 		consts.CmdShowRenameFile:              b.showRenameFile,
 		consts.CmdShowMultilineTask:           b.showMultilineTask,
@@ -324,7 +325,7 @@ func (b *Bot) allowedTextCmds() []string {
 		consts.CmdShowMoveFromToday,
 		consts.CmdAddToJournalShortcut,
 		consts.CmdAddToRecentFileShortcut,
-		//"help" TODO,
+		consts.CmdShowHelp,
 		//"err" TODO,
 	}
 }
@@ -555,11 +556,32 @@ func (b *Bot) tr(str string, args ...any) string {
 	return fmt.Sprintf(str, args...)
 }
 
-// Replace last message + keyboard with the new ones
-// Or show the new one (in case of photo)
-func (b *Bot) show(html string, kb *tg.Keyboard) error {
+// Replace last message + keyboard with the new one
+// Or show the new one (in case of photo).
+func (b *Bot) showHTML(validHTML string, kb *tg.Keyboard) error {
 	mid, hasLastKeyboard := b.db.LastKeyboardMsgID(b.userID)
-	textChunks := txt.SplitTextIntoChunks(html, maxMsgLength)
+	if !hasLastKeyboard {
+		b.delAllKeyboards()
+
+		mid, err := b.tg.Send(b.userID, validHTML, kb, tg.MarkupHTML)
+		if err != nil {
+			return fmt.Errorf("show: %w", err)
+		}
+
+		b.db.SetLastKeyboardMsgID(b.userID, mid)
+
+		return nil
+	}
+
+	return b.tg.Edit(b.userID, mid, validHTML, kb, tg.MarkupHTML)
+}
+
+// Replace last message + keyboard with the new ones
+// Or show the new one (in case of photo).
+// Read "Markdown to HTML conversion" section in readme's ADRs
+func (b *Bot) showMD(probablyInvalidMD string, kb *tg.Keyboard) error {
+	mid, hasLastKeyboard := b.db.LastKeyboardMsgID(b.userID)
+	textChunks := txt.SplitTextIntoChunks(probablyInvalidMD, maxMsgLength)
 	if !hasLastKeyboard || len(textChunks) > 1 {
 		b.delAllKeyboards()
 
@@ -582,7 +604,7 @@ func (b *Bot) show(html string, kb *tg.Keyboard) error {
 		return nil
 	}
 
-	return b.tg.Edit(b.userID, mid, html, kb, tg.MarkupHTML)
+	return b.tg.Edit(b.userID, mid, probablyInvalidMD, kb, tg.MarkupHTML)
 }
 
 func (b *Bot) showMoveTo(params []string) error {
@@ -627,7 +649,7 @@ func (b *Bot) showMoveTo(params []string) error {
 
 	b.delAllKeyboards()
 
-	err := b.show(b.tr("Task added for <b>today</b>!"), &kb)
+	err := b.showHTML(b.tr("Task added for <b>today</b>!"), &kb)
 	if err != nil {
 		return fmt.Errorf("move: %w", err)
 	}
@@ -676,7 +698,7 @@ func (b *Bot) ShowToday(_ []string) error {
 	}
 
 	msg := b.todayLabel()
-	err = b.show(msg, &kb)
+	err = b.showHTML(msg, &kb)
 	if err != nil {
 		return fmt.Errorf("show list: %w", err)
 	}
@@ -714,7 +736,7 @@ func (b *Bot) showLaterTasks(_ []string) error {
 	kb.AddRow(tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil)))
 
 	msg := b.tr("⏳ Your tasks for <b>later</b>:")
-	err = b.show(msg, &kb)
+	err = b.showHTML(msg, &kb)
 	if err != nil {
 		return fmt.Errorf("show list: %w", err)
 	}
@@ -773,7 +795,7 @@ func (b *Bot) showFiles(_ []string) error {
 	}
 	kb.AddRow(footer)
 
-	err = b.show(b.tr("📄 Your files:")+wideSpacer, &kb)
+	err = b.showHTML(b.tr("📄 Your files:")+wideSpacer, &kb)
 	if err != nil {
 		return fmt.Errorf("show files: %w", err)
 	}
@@ -797,7 +819,7 @@ func (b *Bot) showChecklists(_ []string) error {
 	}
 	kb.AddRow(tg.NewBtn(b.tr("🏠 Today"), tg.NewCmd(consts.CmdShowToday, nil)))
 
-	err = b.show(b.tr("☑️ Checklists"), &kb)
+	err = b.showHTML(b.tr("☑️ Checklists"), &kb)
 	if err != nil {
 		return fmt.Errorf("show checklists: %w", err)
 	}
@@ -822,7 +844,7 @@ func (b *Bot) showPostpone(_ []string) error {
 		tg.NewBtn(b.tr("OK"), tg.NewCmd(consts.CmdShowToday, []string{})),
 	))
 
-	err = b.show(b.tr("🦥 Select a task to postpone:"), &kb)
+	err = b.showHTML(b.tr("🦥 Select a task to postpone:"), &kb)
 	if err != nil {
 		return fmt.Errorf("show postpone: %w", err)
 	}
@@ -847,7 +869,7 @@ func (b *Bot) showMoveFromToday(_ []string) error {
 		tg.NewBtn(b.tr("OK"), tg.NewCmd(consts.CmdShowToday, []string{})),
 	))
 
-	err = b.show(b.tr("🦥 Select a task to move:"), &kb)
+	err = b.showHTML(b.tr("🦥 Select a task to move:"), &kb)
 	if err != nil {
 		return fmt.Errorf("show move from today: %w", err)
 	}
@@ -876,7 +898,7 @@ func (b *Bot) postpone(params []string) error {
 
 // TODO add tests
 // TODO add ability to rename later task?
-func (b *Bot) showRename(params []string) error {
+func (b *Bot) showRename(_ []string) error {
 	dir := fs.DirToday
 
 	files, err := b.fs.FilesAndDirs(dir)
@@ -895,7 +917,7 @@ func (b *Bot) showRename(params []string) error {
 	}
 	kb.AddRow(tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil)))
 
-	err = b.show(b.todayLabel(), &kb)
+	err = b.showHTML(b.todayLabel(), &kb)
 	if err != nil {
 		return fmt.Errorf("show rename: %w", err)
 	}
@@ -919,7 +941,7 @@ func (b *Bot) showRenameFile(params []string) error {
 	cmd := tg.NewCmd(consts.CmdRename, []string{dir, filename, "%s"})
 	b.db.SetInputExpectation(b.userID, cmd)
 
-	err = b.show(i18n.Tr("OK. Send me the new name for your task"), kb)
+	err = b.showHTML(i18n.Tr("OK. Send me the new name for your task"), kb)
 	if err != nil {
 		return fmt.Errorf("show rename: %w", err)
 	}
@@ -957,7 +979,7 @@ func (b *Bot) showStats(_ []string) error {
 	}
 
 	kb := tg.NewKeyboard([]tg.Row{tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil))})
-	err = b.show(report, kb)
+	err = b.showHTML(report, kb)
 	if err != nil {
 		return fmt.Errorf("show stats: %w", err)
 	}
@@ -976,7 +998,7 @@ func (b *Bot) showSchedule(_ []string) error {
 	}
 
 	kb := tg.NewKeyboard([]tg.Row{tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil))})
-	err = b.show(schedule, kb)
+	err = b.showHTML(schedule, kb)
 	if err != nil {
 		return fmt.Errorf("show stats: %w", err)
 	}
@@ -1028,7 +1050,7 @@ func (b *Bot) showMultilineTask(params []string) error {
 		),
 	})
 
-	err = b.show(content, kb)
+	err = b.showHTML(content, kb)
 	if err != nil {
 		return fmt.Errorf("show task: %w", err)
 	}
@@ -1067,7 +1089,7 @@ func (b *Bot) showFile(params []string) error {
 
 	md := fmt.Sprintf("%s\n%s", fs.Title(filename), content)
 	html := txt.Html(md)
-	err = b.show(html, kb)
+	err = b.showHTML(html, kb)
 	if err != nil {
 		return fmt.Errorf("show file: %w", err)
 	}
@@ -1114,7 +1136,7 @@ func (b *Bot) showChecklist(params []string) error {
 	}
 	kb.AddRow(tg.NewBtn(i18n.StrToday, tg.NewCmd(consts.CmdShowToday, nil)))
 
-	err = b.show(fs.Title(checklist)+wideSpacer, kb)
+	err = b.showHTML(fs.Title(checklist)+wideSpacer, kb)
 	if err != nil {
 		return fmt.Errorf("show checklist: %w", err)
 	}
@@ -1514,7 +1536,7 @@ func (b *Bot) showChecklistItem(params []string) error {
 		),
 	})
 
-	err = b.show(content, kb)
+	err = b.showHTML(content, kb)
 	if err != nil {
 		return fmt.Errorf("show checklist item: %w", err)
 	}
@@ -1582,7 +1604,7 @@ func (b *Bot) showToADay(params []string) error {
 		return fmt.Errorf("show for a day: %w", err)
 	}
 
-	err = b.show(i18n.Tr("Choose a day"), kb)
+	err = b.showHTML(i18n.Tr("Choose a day"), kb)
 	if err != nil {
 		return fmt.Errorf("show for a day: %w", err)
 	}
@@ -1694,7 +1716,7 @@ func (b *Bot) showMoveToFileOrDir(params []string) error {
 
 	b.db.SetInputExpectation(b.userID, tg.NewCmd(consts.CmdMoveToNewFile, []string{filenameHash, "%s"}))
 
-	err = b.show("📄 Select a file or enter a name for a new one:", kb)
+	err = b.showHTML("📄 Select a file or enter a name for a new one:", kb)
 	if err != nil {
 		return fmt.Errorf("to file dialog: %w", err)
 	}
@@ -1712,7 +1734,7 @@ func (b *Bot) showToChecklist(params []string) error {
 
 	b.db.SetInputExpectation(b.userID, tg.NewCmd(consts.CmdMoveToNewChecklist, []string{filenameHash, "%s"}))
 
-	err = b.show("choose your checklist", kb)
+	err = b.showHTML("choose your checklist", kb)
 	if err != nil {
 		return fmt.Errorf("show to checklist: %w", err)
 	}
@@ -1874,7 +1896,7 @@ func (b *Bot) showToADayRecurring(params []string) error {
 	}
 	kb.AddRow(tg.NewBtn(i18n.StrToToday, tg.NewCmd(consts.CmdShowToday, nil)))
 
-	err := b.show(i18n.Tr("Repeat the task"), kb)
+	err := b.showHTML(i18n.Tr("Repeat the task"), kb)
 	if err != nil {
 		return fmt.Errorf("showRecuringKeyboard : %w", err)
 	}
@@ -1895,6 +1917,14 @@ func (b *Bot) addToFile(filename, content string) error {
 	if err != nil {
 		return fmt.Errorf("add to file: can't save file: %w", err)
 	}
+
+	return nil
+}
+
+// TODO release add help
+func (b *Bot) showHelp(_ []string) error {
+	msg := strings.Repeat("a", 4090)
+	msg = msg + "<b>aaaaaa</b>"
 
 	return nil
 }

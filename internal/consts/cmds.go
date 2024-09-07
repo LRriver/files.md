@@ -15,6 +15,7 @@ const (
 	CmdShowRenameFile              = "rename_file"
 	CmdShowChecklists              = "checklists"
 	CmdShowStats                   = "stats"
+	CmdShowHelp                    = "help"
 	CmdComplete                    = "c"
 	CmdPostpone                    = "post"
 	CmdShowMultilineTask           = "task"
