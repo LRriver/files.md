@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"fmt"
 	"net/http"
 	"path"
 	"strconv"
@@ -152,7 +153,13 @@ func setupRouter(router *http.ServeMux) {
 		userConf := userconfig.NewConfig(userFS, userID, config.Config.ConfigFilename)
 		err = journal.AddEmoji(userFS, emoji, userConf.Timezone())
 		if err != nil {
-			w.Write([]byte("can't write journal"))
+			w.Write([]byte("can't write habit emoji to journal"))
+		}
+	
+		record := fmt.Sprintf("%s %s", emoji, habitName)
+		err = journal.AddRecord(userFS, record, userConf.Timezone())
+		if err != nil {
+			w.Write([]byte("can't write habit to journal"))
 		}
 	})
 }

@@ -6,12 +6,13 @@ import (
 	"unicode"
 )
 
+// Parser Combinators. Watch an amazing video here: https://youtu.be/dDtZLm7HIJs
+type Parser func(input string) []token
+
 type token struct {
 	consumed string
 	left     string
 }
-
-type Parser func(input string) []token
 
 var openTags = map[string]string{
 	"*":  "<i>",
@@ -27,6 +28,53 @@ var closeTags = map[string]string{
 	"_":  "</i>",
 	"__": "</b>",
 	"`":  "</code>",
+}
+
+// MDtoHTML converts user's markdown to Telegram-supported subset of HTML
+// Telegram supported tags:
+// <b>bold</b>, <strong>bold</strong>
+// <i>italic</i>, <em>italic</em>
+// <u>underline</u>, <ins>underline</ins>
+// <s>strikethrough</s>, <strike>strikethrough</strike>, <del>strikethrough</del>
+// <span class="tg-spoiler">spoiler</span>, <tg-spoiler>spoiler</tg-spoiler>
+// <b>bold <i>italic bold <s>italic bold strikethrough <span class="tg-spoiler">italic bold strikethrough spoiler</span></s> <u>underline italic bold</u></i> bold</b>
+// <a href="http://www.example.com/">inline URL</a>
+// <a href="tg://user?id=123456789">inline mention of a user</a>
+// <tg-emoji emoji-id="5368324170671202286">👍</tg-emoji>
+// <code>inline fixed-width code</code>
+// <pre>pre-formatted fixed-width code block</pre>
+// <pre><code class="language-python">pre-formatted fixed-width code block written in the Python programming language</code></pre>
+// <blockquote>Block quotation started\nBlock quotation continued\nThe last line of the block quotation</blockquote>
+// <blockquote expandable>Expandable block quotation started\nExpandable block quotation continued\nExpandable block quotation continued\nHidden by default part of the block quotation started\nExpandable block quotation continued\nThe last line of the block quotation</blockquote>
+func MDtoHTML(md string) string {
+	mdWithoutCode := EscapeHTML(md)
+	mdWithoutCode, codePlaceholders := ReplaceWithPlaceholders(mdWithoutCode, "(?s)```.*?```", "c0debl0ck")
+	mdWithoutCode, inlinePlaceholders := ReplaceWithPlaceholders(mdWithoutCode, "`[^`]*`", "inl1ne")
+	// By this point our markdown is safe to send as HTML via Telegram.
+	// There won't be any issues like "missing closing HTML tag",
+	// for the cases when our markdown has some html tags.
+	// We try to convert as much markdown as possible to Telegram HTML.
+
+	docs := mdParser()(mdWithoutCode)
+	// TODO only return if remained is empty?
+	if len(docs) > 0 {
+		mdWithoutCode = docs[0].consumed
+	}
+	mdWithCode := RestoreFromPlaceholders(mdWithoutCode, codePlaceholders)
+	mdWithCode = RestoreFromPlaceholders(mdWithCode, inlinePlaceholders)
+
+	// Covert ` and ``` to HTML tags
+	reCodeBlock := regexp.MustCompile("(?s)```(.*?)```")
+	mdWithCode = reCodeBlock.ReplaceAllString(mdWithCode, "<pre>$1</pre>")
+	reInlineCode := regexp.MustCompile("`(.*?)`")
+	mdWithCode = reInlineCode.ReplaceAllString(mdWithCode, "<code>$1</code>")
+
+	// Convert ### Header to <b>Header</b>
+	// TODO add tests here
+	reHeader := regexp.MustCompile(`(?m)^#+\s*(.+)`)
+	mdWithCode = reHeader.ReplaceAllString(mdWithCode, "<b>$1</b>")
+
+	return mdWithCode
 }
 
 func term(t string) Parser {
@@ -149,53 +197,6 @@ func nonMarkdown() Parser {
 		}
 		return nil
 	}
-}
-
-// MDtoHTML converts user's markdown to Telegram-supported subset of HTML
-// Telegram supported tags:
-// <b>bold</b>, <strong>bold</strong>
-// <i>italic</i>, <em>italic</em>
-// <u>underline</u>, <ins>underline</ins>
-// <s>strikethrough</s>, <strike>strikethrough</strike>, <del>strikethrough</del>
-// <span class="tg-spoiler">spoiler</span>, <tg-spoiler>spoiler</tg-spoiler>
-// <b>bold <i>italic bold <s>italic bold strikethrough <span class="tg-spoiler">italic bold strikethrough spoiler</span></s> <u>underline italic bold</u></i> bold</b>
-// <a href="http://www.example.com/">inline URL</a>
-// <a href="tg://user?id=123456789">inline mention of a user</a>
-// <tg-emoji emoji-id="5368324170671202286">👍</tg-emoji>
-// <code>inline fixed-width code</code>
-// <pre>pre-formatted fixed-width code block</pre>
-// <pre><code class="language-python">pre-formatted fixed-width code block written in the Python programming language</code></pre>
-// <blockquote>Block quotation started\nBlock quotation continued\nThe last line of the block quotation</blockquote>
-// <blockquote expandable>Expandable block quotation started\nExpandable block quotation continued\nExpandable block quotation continued\nHidden by default part of the block quotation started\nExpandable block quotation continued\nThe last line of the block quotation</blockquote>
-func MDtoHTML(md string) string {
-	mdWithoutCode := EscapeHTML(md)
-	mdWithoutCode, codePlaceholders := ReplaceWithPlaceholders(mdWithoutCode, "(?s)```.*?```", "c0debl0ck")
-	mdWithoutCode, inlinePlaceholders := ReplaceWithPlaceholders(mdWithoutCode, "`[^`]*`", "inl1ne")
-	// By this point our markdown is safe to send as HTML via Telegram.
-	// There won't be any issues like "missing closing HTML tag",
-	// for the cases when our markdown has some html tags.
-	// We try to convert as much markdown as possible to Telegram HTML.
-
-	docs := mdParser()(mdWithoutCode)
-	// TODO only return if remained is empty?
-	if len(docs) > 0 {
-		mdWithoutCode = docs[0].consumed
-	}
-	mdWithCode := RestoreFromPlaceholders(mdWithoutCode, codePlaceholders)
-	mdWithCode = RestoreFromPlaceholders(mdWithCode, inlinePlaceholders)
-
-	// Covert ` and ``` to HTML tags
-	reCodeBlock := regexp.MustCompile("(?s)```(.*?)```")
-	mdWithCode = reCodeBlock.ReplaceAllString(mdWithCode, "<pre>$1</pre>")
-	reInlineCode := regexp.MustCompile("`(.*?)`")
-	mdWithCode = reInlineCode.ReplaceAllString(mdWithCode, "<code>$1</code>")
-
-	// Convert ### Header to <b>Header</b>
-	// TODO add tests here
-	reHeader := regexp.MustCompile(`(?m)^#+\s*(.+)`)
-	mdWithCode = reHeader.ReplaceAllString(mdWithCode, "<b>$1</b>")
-
-	return mdWithCode
 }
 
 func mdParser() Parser {
