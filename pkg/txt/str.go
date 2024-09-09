@@ -147,3 +147,27 @@ func RestoreFromPlaceholders(str string, placeholders map[string]string) string 
 	}
 	return str
 }
+
+// TODO add tests
+func SplitLongLines(input string, maxRunesPerLine int) string {
+	var res strings.Builder
+	lines := strings.Split(input, "\n")
+
+	for _, line := range lines {
+		runeCount := utf8.RuneCountInString(line)
+		if runeCount > maxRunesPerLine {
+			runes := []rune(line)
+			for i := 0; i < len(runes); i += maxRunesPerLine {
+				end := i + maxRunesPerLine
+				if end > len(runes) {
+					end = len(runes)
+				}
+				res.WriteString(string(runes[i:end]) + "\n")
+			}
+		} else {
+			res.WriteString(line + "\n")
+		}
+	}
+
+	return res.String()
+}

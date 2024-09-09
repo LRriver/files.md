@@ -29,7 +29,7 @@ var Chat *ChatGUI
 const (
 	width           = 500
 	height          = 500
-	maxCharsPerLine = 80
+	maxCharsPerLine = 60
 )
 
 func NewGui(userID int64, updater func(u internal.UpdInterface) error) *ChatGUI {
@@ -72,19 +72,10 @@ func (c *ChatGUI) Send(_ int64, text string, kb *tg.Keyboard, markup string) (in
 	btnsContainer := container.NewVBox()
 	var msgContainer *fyne.Container
 	if len(text) > maxCharsPerLine {
+		text = txt.SplitLongLines(text, maxCharsPerLine)
 		multilineEntry := widget.NewMultiLineEntry()
-		var result []string
-		lines := strings.Split(text, "\n")
-		for _, line := range lines {
-			for len(line) > maxCharsPerLine {
-				result = append(result, line[:maxCharsPerLine])
-				line = line[maxCharsPerLine:]
-			}
-			result = append(result, line)
-		}
-		text = strings.Join(result, "\n")
 		multilineEntry.Text = text
-		multilineEntry.SetMinRowsVisible(len(result))
+		multilineEntry.SetMinRowsVisible(strings.Count(text, "\n") + 1)
 		msgContainer = container.New(layout.NewBorderLayout(multilineEntry, btnsContainer, nil, nil))
 		msgContainer.Add(multilineEntry)
 		msgContainer.Add(btnsContainer)
