@@ -13,7 +13,6 @@ import (
 // In-memory database
 var filenameByMsgID sync.Map
 var dirByMsgID sync.Map
-var lastKeyboardMsgIDs sync.Map
 var inputExpectations sync.Map
 var recentCommands sync.Map
 var recentCommandsTargets sync.Map

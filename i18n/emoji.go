@@ -43,14 +43,14 @@ func Emoji(str string) string {
 	strLower := strings.ToLower(str)
 	aliases := []string{strLower, strLower + "s", strings.TrimSuffix(strLower, "s")}
 	for _, alias := range aliases {
-		icon, _ := emojisByKeyword[alias]
+		icon := emojisByKeyword[alias]
 		if icon != "" {
 			return icon
 		}
 	}
 
 	for _, word := range strings.Fields(strLower) {
-		icon, _ := emojisByKeyword[word]
+		icon := emojisByKeyword[word]
 		if icon != "" {
 			return icon
 		}

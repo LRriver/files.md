@@ -14,7 +14,8 @@ func TestSend(t *testing.T) {
 	r := require.New(t)
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		w.Write([]byte(`{"ok":true, "result": {"id": -2}}`))
+		_, err := w.Write([]byte(`{"ok":true, "result": {"id": -2}}`))
+		r.NoError(err)
 
 		if req.URL.Path == "/sendMessage" {
 			body, err := io.ReadAll(req.Body)
@@ -27,14 +28,16 @@ func TestSend(t *testing.T) {
 
 	tg := NewTG(api)
 
-	tg.SendHTML(-1, "t", nil)
+	_, err := tg.SendHTML(-1, "t", nil)
+	r.NoError(err)
 }
 
 func TestEdit(t *testing.T) {
 	r := require.New(t)
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		w.Write([]byte(`{"ok":true, "result": {"id": -2}}`))
+		_, err := w.Write([]byte(`{"ok":true, "result": {"id": -2}}`))
+		r.NoError(err)
 
 		if req.URL.Path == "/editMessage" {
 			body, err := io.ReadAll(req.Body)
@@ -47,14 +50,16 @@ func TestEdit(t *testing.T) {
 
 	tg := NewTG(api)
 
-	tg.Edit(-1, -2, "t", nil, MarkupHTML)
+	err := tg.Edit(-1, -2, "t", nil, MarkupHTML)
+	r.NoError(err)
 }
 
 func TestDel(t *testing.T) {
 	r := require.New(t)
 
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		w.Write([]byte(`{"ok":true, "result": {"id": -2}}`))
+		_, err := w.Write([]byte(`{"ok":true, "result": {"id": -2}}`))
+		r.NoError(err)
 
 		if req.URL.Path == "/deleteMessage" {
 			body, err := io.ReadAll(req.Body)
@@ -67,5 +72,6 @@ func TestDel(t *testing.T) {
 
 	tg := NewTG(api)
 
-	tg.Del(-1, -2)
+	err := tg.Del(-1, -2)
+	r.NoError(err)
 }

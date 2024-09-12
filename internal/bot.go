@@ -28,10 +28,10 @@ import (
 )
 
 var (
-	botPlugins                 []BotPluginInterface
-	errUnknownCommand          = errors.New("unknown command")
-	errIvalidRequestFromInline = errors.New("invalid request from inline query")
-	errInvalidInlineQuery      = errors.New("invalid inline query")
+	botPlugins                  []BotPluginInterface
+	errUnknownCommand           = errors.New("unknown command")
+	errInvalidRequestFromInline = errors.New("invalid request from inline query")
+	errInvalidInlineQuery       = errors.New("invalid inline query")
 )
 
 const (
@@ -498,7 +498,7 @@ func (b *Bot) answerSearch(u UpdInterface) error {
 
 func (b *Bot) answerFileRequest(msg string) error {
 	if strings.Contains(msg, "../") || strings.Contains(msg, "/..") {
-		return fmt.Errorf("insecure input '%s': %w", msg, errIvalidRequestFromInline)
+		return fmt.Errorf("insecure input '%s': %w", msg, errInvalidRequestFromInline)
 	}
 
 	dirAndFilename := strings.Split(msg, "/")
@@ -510,7 +510,7 @@ func (b *Bot) answerFileRequest(msg string) error {
 		dir = strings.TrimSpace(dirAndFilename[0])
 		filename = strings.TrimSpace(dirAndFilename[1])
 	} else {
-		return fmt.Errorf("invalid inline query '%s': %w", msg, errIvalidRequestFromInline)
+		return fmt.Errorf("invalid inline query '%s': %w", msg, errInvalidRequestFromInline)
 	}
 
 	b.delAllKeyboards()
@@ -684,33 +684,9 @@ func (b *Bot) showMoveTo(params []string) error {
 	}
 
 	// Add recent command if any
-	recentCmd, ok := b.db.RecentCommand(b.userID)
-	if ok {
-		args, _ := b.db.RecentCommandParams(b.userID)
-		args = append(args, filenameHash)
-		targetFilenameHash := args[0]
-
-		var unhashedTarget string
-		var err error
-		if recentCmd == consts.CmdMoveToExistingFile {
-			unhashedTarget, err = b.fs.Unhash(fs.DirRoot, targetFilenameHash)
-		} else if recentCmd == consts.CmdMoveToExistingNote {
-			dir, dirErr := b.fs.Unhash(fs.DirRoot, args[1])
-			if dirErr == nil {
-				unhashedTarget, err = b.fs.Unhash(dir, targetFilenameHash)
-			}
-		} else {
-			err = fmt.Errorf("unsupported")
-		}
-
-		if err == nil {
-			icon := i18n.Emoji("file")
-			if recentCmd == consts.CmdMoveToDir {
-				icon = i18n.Emoji("dir")
-			}
-			name := fmt.Sprintf("%s %s", icon, fs.Title(unhashedTarget))
-			userMoveToBtns = append(userMoveToBtns, tg.NewBtn(name, tg.NewCmd(recentCmd, args)))
-		}
+	recentBtn := b.recentCmdBtn(filenameHash)
+	if recentBtn != nil {
+		userMoveToBtns = append(userMoveToBtns, *recentBtn)
 	}
 
 	userMoveToBtns = append(userMoveToBtns, tg.NewBtn(i18n.StrGoToToday, tg.NewCmd(consts.CmdShowToday, nil)))
@@ -1499,6 +1475,10 @@ func (b *Bot) moveToNewFile(params []string) error {
 
 	// Save existing filename to content in case the content of new file is empty (i.e. not multiline)
 	content, err := b.fs.Read(fs.DirRoot, filename)
+	if err != nil {
+		return fmt.Errorf("move to new file: can't read file '%s': %w", filename, err)
+	}
+
 	content = strings.TrimSpace(content)
 	if len(content) == 0 {
 		content = fs.Title(filename)
@@ -1648,7 +1628,10 @@ func (b *Bot) complete(params []string) error {
 	}
 
 	if dir == fs.DirToday && filename == fs.FilePomodoro {
-		b.cfg.AddToSchedule(filename, time.Now().Unix()+int64(b.cfg.PomodoroDuration().Seconds()), "")
+		err = b.cfg.AddToSchedule(filename, time.Now().Unix()+int64(b.cfg.PomodoroDuration().Seconds()), "")
+		if err != nil {
+			return fmt.Errorf("complete: can't add to schedule: %w", err)
+		}
 	} else {
 		// We can tolerate failure of writing to journal, since that's not single source of truth
 		_ = journal.AddRecord(b.fs, fmt.Sprintf("✅ %s", fs.Title(filename)), b.cfg.Timezone())
@@ -1736,7 +1719,10 @@ func (b *Bot) schedule(params []string) error {
 		return fmt.Errorf("schedule: can't unhash filename %s in list: %s", filenameHash, err)
 	}
 
-	b.cfg.AddToSchedule(filename, scheduleTime, cron)
+	err = b.cfg.AddToSchedule(filename, scheduleTime, cron)
+	if err != nil {
+		return fmt.Errorf("schedule: can't add to schedule: %w", err)
+	}
 
 	err = b.fs.Rename(fs.DirToday, filename, fs.DirLater, filename)
 	if err != nil {
@@ -1764,13 +1750,8 @@ func (b *Bot) delAllKeyboards() {
 	for _, msgID := range msgIDs {
 		// If we fail to del - user would get a bunch
 		// of keyboards in one chat, which is messy but not critical
-		b.tg.Del(b.userID, msgID)
+		_ = b.tg.Del(b.userID, msgID)
 	}
-}
-
-// User-namespaced redis key
-func (b *Bot) key(key string) string {
-	return fmt.Sprintf("%s:%d", key, b.userID)
 }
 
 func (b *Bot) showToADay(params []string) error {
@@ -2020,9 +2001,7 @@ func (b *Bot) togglePomodoro(_ []string) error {
 	// Create Pomodoro task
 	err = b.fs.Touch(fs.DirToday, fs.FilePomodoro)
 	if err != nil {
-		if err != nil {
-			return fmt.Errorf("toggle pomodoro: failed to show pomodoro hint message %w", err)
-		}
+		return fmt.Errorf("toggle pomodoro: failed to show pomodoro hint message %w", err)
 	}
 
 	err = b.send(fmt.Sprintf("Pomodoro is run: you can see \"%v\" task in your %v folder. Once are ready to focus on something and start working, just complete this task."+

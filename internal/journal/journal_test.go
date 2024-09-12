@@ -21,11 +21,10 @@ func TestAddRecord(t *testing.T) {
 	}
 
 	type testcase struct {
-		name                string
-		md                  string
-		record              string
-		want                string
-		journalHeaderFormat string
+		name   string
+		md     string
+		record string
+		want   string
 	}
 
 	tests := []testcase{
@@ -76,7 +75,8 @@ func TestAddRecord(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 			r.NoError(err)
-			userFS.Write(fs.DirJournal, "2023.05 May.md", test.md)
+			err = userFS.Write(fs.DirJournal, "2023.05 May.md", test.md)
+			r.NoError(err)
 
 			err = AddRecord(userFS, test.record, time.UTC)
 			r.NoError(err)
@@ -92,6 +92,7 @@ func TestAddEmojiNewFile(t *testing.T) {
 	r := require.New(t)
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
 
 	savedNow := Now
 	defer func() {
@@ -114,8 +115,10 @@ func TestAddEmojiExistingFile(t *testing.T) {
 	r := require.New(t)
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
 	md := "#### 0, Sunday\nSome Note\n#### 1 January, Monday\nSome Note"
-	userFS.Write("journal", "2024.01 January.md", md)
+	err = userFS.Write("journal", "2024.01 January.md", md)
+	r.NoError(err)
 
 	savedNow := Now
 	defer func() {
@@ -138,8 +141,10 @@ func TestAddEmojiExistingFileMissingDay(t *testing.T) {
 	r := require.New(t)
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
 	md := "#### 0, Sunday\nSome Note\n"
-	userFS.Write("journal", "2024.01 January.md", md)
+	err = userFS.Write("journal", "2024.01 January.md", md)
+	r.NoError(err)
 
 	savedNow := Now
 	defer func() {
@@ -162,8 +167,10 @@ func TestAddMoodEmojiExistingFileExistingEmojis(t *testing.T) {
 	r := require.New(t)
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
 	md := "#### 0, Sunday\nSome Note\n#### 1 January, Monday 🌱📵\nSome Note"
-	userFS.Write("journal", "2024.01 January.md", md)
+	err = userFS.Write("journal", "2024.01 January.md", md)
+	r.NoError(err)
 
 	savedNow := Now
 	defer func() {
@@ -186,8 +193,10 @@ func TestAddRegularEmojiExistingFileExistingEmojis(t *testing.T) {
 	r := require.New(t)
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
 	md := "#### 0, Sunday\nSome Note\n#### 1 January, Monday 🌱📵\nSome Note"
-	userFS.Write("journal", "2024.01 January.md", md)
+	err = userFS.Write("journal", "2024.01 January.md", md)
+	r.NoError(err)
 
 	savedNow := Now
 	defer func() {

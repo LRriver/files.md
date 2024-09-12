@@ -11,21 +11,13 @@ import (
 	"sync"
 	"time"
 
-	"zakirullin/stuffbot/internal/consts"
 	"zakirullin/stuffbot/internal/fs"
 )
 
 var defaultConfig = config{
-	Language: "en",
-	Timezone: "UTC",
-	MoveToCmds: []string{
-		consts.CmdScheduleForTmrw,
-		consts.CmdLater,
-		consts.CmdShowScheduleForDay,
-		consts.CmdShowMoveToDirOrFile,
-		consts.CmdMoveToJournal,
-		//"checklist",
-	},
+	Language:                  "en",
+	Timezone:                  "UTC",
+	MoveToCmds:                []string{},
 	PomodoroDurationInMinutes: 50,
 	Schedules:                 []Schedule{},
 	QuickCmds:                 []string{},

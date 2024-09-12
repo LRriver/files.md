@@ -12,13 +12,7 @@ import (
 const defaultTestCfg = `{
     "language": "en",
     "timezone": "UTC",
-    "moveToCommands": [
-        "sc_tmrw",
-        "later",
-        "sc_day",
-        "to_file",
-        "mv_to_journal"
-    ],
+    "moveToCommands": [],
     "pomodoroDurationInMinutes": 50,
     "schedules": [],
     "quickCommands": [],
