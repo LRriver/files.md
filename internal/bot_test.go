@@ -154,6 +154,128 @@ func TestAddTaskWithSpecCharsToToday(t *testing.T) {
 	r.Equal("New task\nUrl! https://g.com (Also_text] ##header\n-item1\n-item2\n1+1=2", content)
 }
 
+func TestAddTaskWithOnlyWhitespace(t *testing.T) {
+	// Test adding a task that contains only whitespace characters
+	r := require.New(t)
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+
+	tgram := tg.NewFakeTG()
+
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
+
+	err = bot.Answer(tg.NewFakeUpd(-1, "   \t\n"))
+	r.NoError(err)
+
+	tasks, err := bot.fs.FilesAndDirs("today")
+	r.NoError(err)
+	r.Len(tasks, 0)
+}
+
+func TestAddTaskWithLeadingAndTrailingSpaces(t *testing.T) {
+	// Test adding a task with leading and trailing spaces in the name
+	r := require.New(t)
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+
+	tgram := tg.NewFakeTG()
+
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
+
+	err = bot.Answer(tg.NewFakeUpd(-1, "   Task with spaces   "))
+	r.NoError(err)
+
+	tasks, err := bot.fs.FilesAndDirs("today")
+	r.NoError(err)
+	r.Len(tasks, 1)
+	r.Equal("Task with spaces.md", tasks[0].Name)
+}
+
+func TestShowEmptyTodayList(t *testing.T) {
+	// Test displaying today's tasks when there are none
+	r := require.New(t)
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+
+	tgram := tg.NewFakeTG()
+
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
+
+	err = bot.Answer(tg.NewFakeUpdCmd(-1, tg.NewCmd("today", nil)))
+	r.NoError(err)
+	r.Equal("You have no tasks for today! 🌴", tgram.LastSentText)
+}
+
+func TestSaveFromTextMsgWithSpecialFileNameCharacters(t *testing.T) {
+	// Test handling of text messages with characters that are invalid in file names
+	r := require.New(t)
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+
+	tgram := tg.NewFakeTG()
+
+	invalidFileNameText := "Task with invalid chars <>:\"/\\|?*"
+	sanitizedFileName := "Task with invalid chars &lt;&gt;：\"/\\|?*.md"
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
+	err = bot.Answer(tg.NewFakeUpd(-1, invalidFileNameText))
+	r.NoError(err)
+
+	tasks, err := bot.fs.FilesAndDirs("today")
+	r.NoError(err)
+	r.Len(tasks, 1)
+	r.Equal(sanitizedFileName, tasks[0].Name)
+
+	content, err := bot.fs.Read("today", sanitizedFileName)
+	r.NoError(err)
+	r.Equal(invalidFileNameText, content)
+}
+
+func TestSaveFromTextMsgWithUnicodeCharacters(t *testing.T) {
+	// Test handling of text messages containing Unicode characters
+	r := require.New(t)
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+
+	tgram := tg.NewFakeTG()
+
+	unicodeText := "测试含有Unicode字符的文本🚀🌟"
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
+	err = bot.Answer(tg.NewFakeUpd(-1, unicodeText))
+	r.NoError(err)
+
+	tasks, err := bot.fs.FilesAndDirs("today")
+	r.NoError(err)
+	r.Len(tasks, 1)
+	r.Equal("测试含有Unicode字符的文本🚀🌟.md", tasks[0].Name)
+
+	content, err := bot.fs.Read("today", "测试含有Unicode字符的文本🚀🌟.md")
+	r.NoError(err)
+	r.Equal(unicodeText, content)
+}
+
+func TestSaveFromEmptyTextMsg(t *testing.T) {
+	// Test handling of empty text messages
+	r := require.New(t)
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+
+	tgram := tg.NewFakeTG()
+
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
+	err = bot.Answer(tg.NewFakeUpd(-1, ""))
+	r.NoError(err)
+
+	tasks, err := bot.fs.FilesAndDirs("today")
+	r.NoError(err)
+	r.Len(tasks, 0)
+}
+
 func TestSaveFromRegularReply(t *testing.T) {
 	r := require.New(t)
 
