@@ -1898,7 +1898,7 @@ func (b *Bot) showMoveToFileOrDir(params []string) error {
 	btn := tg.NewBtn("🗂 New Dir", tg.NewCmd(consts.CmdRequestNewDir, []string{filenameHash}))
 	dirBtns = append(dirBtns, btn)
 
-	shouldAddSeparator := len(dirBtns) > 0 && len(fileBtns) > 0
+	shouldAddSeparator := len(fileBtns) > 0
 	if shouldAddSeparator {
 		searchCMD := tg.NewCustomCmd(consts.CmdInlineQuerySearchEveryWhere, nil, tg.CmdTypeInlineQueryCurrentChat)
 		kb.AddRow(tg.NewBtn(i18n.Tr("Or choose a dir:"), searchCMD))
