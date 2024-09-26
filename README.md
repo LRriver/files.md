@@ -2,13 +2,10 @@
 
 # Files.md
 An application for your personal stuff:
-- ✅ Tasks  
-- 📌 Notes  
-- 📝 Files
-- 💚 Journal
-- 🛒 Checklists  
-- 🌱 Habits  
-- 🍅 Pomodoro  
+- ✅ Tasks, Checklists
+- 📝 Notes, Files
+- 💚 Journal, Habits
+- 🍅 Pomodoro
 
 **Everything is stored as plain local `*.md` files.**  
 
