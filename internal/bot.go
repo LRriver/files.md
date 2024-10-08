@@ -161,7 +161,7 @@ func (b *Bot) Answer(u Update) error {
 			// It should be handled at cmd extraction step
 			return fmt.Errorf("no such command %s: %w", cmd.Name, errUnknownCommand)
 		}
-		slog.Info("Command is called", "command", cmd.Name, "params", cmd.Params)
+		slog.Debug("Command is called", "command", cmd.Name, "params", cmd.Params)
 		err = handler(cmd.Params)
 		if err != nil {
 			return err
@@ -285,7 +285,7 @@ func (b *Bot) extractCmd(u Update) (*tg.Cmd, error) {
 	// Input expectation is mostly used for renaming things
 	cmd = b.db.InputExpectation(b.userID)
 	if cmd != nil {
-		slog.Info("Got command from input expectation", "command", cmd.Name)
+		slog.Debug("Got command from input expectation", "command", cmd.Name)
 		b.db.DelInputExpectation(b.userID)
 
 		for i, param := range cmd.Params {
