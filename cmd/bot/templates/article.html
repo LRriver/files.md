@@ -391,7 +391,7 @@ stuff // 🧠+
                 document.querySelectorAll('l2').forEach(el => el.style.display = 'inline');
                 document.querySelectorAll('l3').forEach(el => el.style.display = 'none');
                 highlightNewBlocks('l2');
-            } else if (currentHash === '#all') {
+            } else if (currentHash === '#full') {
                 slider.value = 3;
                 document.querySelectorAll('l2').forEach(el => el.style.display = 'inline');
                 document.querySelectorAll('l3').forEach(el => el.style.display = 'inline');
@@ -422,7 +422,7 @@ stuff // 🧠+
             } else if (sliderValue === 2) {
                 location.hash = 'some';
             } else if (sliderValue === 3) {
-                location.hash = 'all';
+                location.hash = 'full';
             }
             window.scrollTo({
                 top: 0,
