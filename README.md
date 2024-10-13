@@ -1,5 +1,7 @@
 <img src="https://github.com/zakirullin/files.md/raw/main/docs/go.svg" alt="Files.md Bot logo" title="Files.md Bot" align="right" height="60" />
 
+[files.md](https://files.md)
+
 # Files.md
 An application for your personal stuff:
 - ✅ Tasks, Checklists
