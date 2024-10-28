@@ -1617,17 +1617,20 @@ func (b *Bot) moveToNewChecklist(params []string) error {
 
 func (b *Bot) moveToJournal(params []string) error {
 	filenameHash := params[0]
-	filename, err := b.fs.Unhash(fs.DirToday, filenameHash)
+	fromFilename, err := b.fs.Unhash(fs.DirToday, filenameHash)
 	if err != nil {
 		return fmt.Errorf("move to journal: can't unhash filename: %w", err)
 	}
-	content, err := b.fs.Read(fs.DirToday, filename)
+	content, err := b.fs.Read(fs.DirToday, fromFilename)
 	if err != nil {
-		return fmt.Errorf("move to journal: can't read content of '%s': %w", filename, err)
+		return fmt.Errorf("move to journal: can't read content of '%s': %w", fromFilename, err)
 	}
-	content = strings.TrimSpace(content)
+
+	filenameHasContent := !strings.HasPrefix(strings.ToLower(content), strings.ToLower(fs.Title(fromFilename)))
 	if len(content) == 0 {
-		content = fs.Title(filename)
+		content = fs.Title(fromFilename)
+	} else if filenameHasContent {
+		content = fmt.Sprintf("%s\n%s", fs.Title(fromFilename), content)
 	}
 
 	err = journal.AddRecord(b.fs, content, b.cfg.Timezone())
@@ -1635,7 +1638,7 @@ func (b *Bot) moveToJournal(params []string) error {
 		return fmt.Errorf("failed to move to journal: can't add note: %w", err)
 	}
 
-	err = b.fs.Del(fs.DirToday, filename)
+	err = b.fs.Del(fs.DirToday, fromFilename)
 	if err != nil {
 		return fmt.Errorf("failed to move to journal: can't delete note: %w", err)
 	}
