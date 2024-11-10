@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWA File Handler</title>
+</head>
+<body>
+<h1>PWA File Handler</h1>
+<button id="openFileButton">Open File</button>
+<button id="saveFileButton" disabled>Save File</button>
+<textarea id="fileContent" placeholder="File content will appear here..." rows="20" cols="60"></textarea>
+
+<script>
+    let fileHandle;
+
+    document.getElementById("openFileButton").addEventListener("click", async () => {
+        // Prompt user to select a file
+        [fileHandle] = await window.showOpenFilePicker();
+        const file = await fileHandle.getFile();
+        const contents = await file.text();
+
+        // Display file contents in textarea
+        document.getElementById("fileContent").value = contents;
+        document.getElementById("saveFileButton").disabled = false;
+    });
+
+    document.getElementById("saveFileButton").addEventListener("click", async () => {
+        if (!fileHandle) return;
+
+        const content = document.getElementById("fileContent").value;
+        const writable = await fileHandle.createWritable();
+        await writable.write(content);
+        await writable.close();
+        alert("File saved successfully!");
+    });
+</script>
+</body>
+</html>

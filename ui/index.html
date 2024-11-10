@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="https://files.md/favicon.ico" sizes="32x32">
+    <link href="normalize.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+    <title>files.md</title>
+    <script src="./lib/tree.js"></script>
+    <script src="./zettel.js"></script>
+    <link rel="stylesheet" href="./lib/tree.css"/>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" crossorigin="anonymous">
+
+    <script src="./lib/codemirror.js"></script>
+    <script src="./lib/core.js"></script>
+    <script src="./lib/markdown.js"></script>
+    <script src="./lib/hypermd.js"></script>
+    <script src="./lib/click.js"></script>
+    <script src="./lib/hide-token.js"></script>
+    <script src="./lib/fold.js"></script>
+    <script src="./lib/fold-image.js"></script>
+    <script src="./lib/fold-emoji.js"></script>
+    <script src="./lib/complete-emoji.js"></script>
+    <script src="./lib/show-hint.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script type="module" src="./lib/ninja-keys/ninja-keys.js"></script>
+    <link rel="stylesheet" href="lib/codemirror.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror/addon/fold/foldgutter.css">
+    <link rel="stylesheet" href="./lib/hypermd.css">
+    <link href="https://fonts.googleapis.com/css?family=Material+Icons&display=swap" rel="stylesheet"/>
+</head>
+<body>
+<div id="files"></div>
+<div id="editor-container"><textarea id="editor"></textarea></div>
+<ninja-keys placeholder="Quick panel" class="dark" openHotkey="cmd+m" noAutoLoadMdIcons="true" hideBreadcrumbs="true">
+    <slot name="footer"></slot>
+</ninja-keys>
+
+<script>
+
+    // var editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+    //     extraKeys: {"Ctrl-b": "autocomplete"},
+    //     hintOptions: {hint: synonyms},
+    //     mode: "markdown",
+    //     lineNumbers: false,
+    // });
+    // HyperMD.switchToNormal(editor);
+    var editor = HyperMD.fromTextArea(document.getElementById("editor"), {
+        mode: "hypermd",
+        lineNumbers: false,
+        extraKeys: {
+            "Ctrl-Space": "autocomplete",   // Use Ctrl+Space to
+        },
+        hintOptions: {
+            hint: CompleteEmoji.createHintFunc()
+        },
+    });
+    editor.setSize(null, "100%");
+    editor.hmdResolveURL = function(w) {
+    }
+    editor.on("inputRead", function (cm, change) {
+        console.log(change);
+        if (change.text.length === 1 && change.text[0] === '[') editor.showHint()
+    })
+    editor.hmdReadLink = function(path, t) {
+        path = path.replace('[', '').replace(']', '');
+        editor.getDoc().setValue(zettel['arch'][path + '.md']);
+        setTimeout(function () {
+            editor.focus();
+            editor.setCursor(editor.lineCount(), 0);
+        }, 0);
+    }
+
+    var root = new TreeNode("zettel"); // Create the root-node
+    for (dir in zettel) {
+        var dirNode = new TreeNode(dir, {expanded: false});
+        for (file in zettel[dir]) {
+            fileNode = new TreeNode(file, {expanded: false});
+            fileNode.on('click', function (n, node) {
+                if (node.parent.toString() === 'journal') {
+                    document.getElementById('editor-container').innerHTML = marked.parse(zettel[node.parent.toString()][node.toString()]);
+                } else {
+                    editor.getDoc().setValue(zettel[node.parent.toString()][node.toString()]);
+                    editor.focus();
+                    editor.setCursor(editor.lineCount(), 0);
+                }
+            });
+            dirNode.addChild(fileNode);
+        }
+        root.addChild(dirNode);
+    }
+
+    var tree = new TreeView(root, "#files", {
+        show_root: false,
+        leaf_icon: ' ',
+        parent_icon: '<i class="fas fa-folder"></i>'
+    });
+</script>
+
+<script>
+    const hotkeys = [
+        {
+            id: "Home",
+            title: "Open Home",
+            hotkey: "cmd+h",
+            mdIcon: "home",
+            handler: () => {
+                console.log("navigation to home");
+            }
+        },
+        {
+            id: "Open Projects",
+            title: "Open Projects",
+            hotkey: "cmd+p",
+            mdIcon: "apps",
+            handler: () => {
+                console.log("navigation to projects");
+            }
+        },
+        {
+            id: "Theme",
+            title: "Change theme...",
+            mdIcon: "desktop_windows",
+            children: [
+                {
+                    id: "Light Theme",
+                    title: "Change theme to Light",
+                    mdIcon: "light_mode",
+                    handler: () => {
+                        console.log("theme light");
+                    }
+                },
+                {
+                    id: "Dark Theme",
+                    title: "Change theme to Dark",
+                    mdIcon: "dark_mode",
+                    keywords: "lol",
+                    handler: () => {
+                        console.log("theme dark");
+                    }
+                }
+            ]
+        }
+    ];
+    const ninja = document.querySelector("ninja-keys");
+    ninja.data = hotkeys;
+</script>
+
+</body>
+</html>
