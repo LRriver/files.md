@@ -23,7 +23,6 @@
     <script src="lib/fold-emoji.js"></script>
     <script src="lib/complete-emoji.js"></script>
     <script src="lib/show-hint.js"></script>
-<!--    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>-->
     <script type="module" src="./lib/ninja-keys/ninja-keys.js"></script>
     <link rel="stylesheet" href="lib/codemirror.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror/addon/fold/foldgutter.css">
@@ -188,11 +187,18 @@
         zettel = {};  // Reset the zettel structure
         await loadDirectory(savedDirectoryHandle);
         buildSidebar();
+        await openFirstFile();
     }
 
     // Recursively load directory and parse .md files
     async function loadDirectory(directoryHandle, path = "", depth = 1) {
+        const entries = [];
         for await (const entry of directoryHandle.values()) {
+            entries.push(entry);
+        }
+        entries.sort((a, b) => a.name.localeCompare(b.name));
+        
+        for await (const entry of entries) {
             if (entry.kind === 'directory') {
                 if (entry.name.startsWith('.') || entry.name === "img") continue;
 
@@ -205,6 +211,24 @@
                 const folder = path.split('/').filter(Boolean).join('/');
                 if (!zettel[folder]) zettel[folder] = {};
                 zettel[folder][entry.name] = { handle: entry };
+            }
+        }
+    }
+
+    async function openFirstFile() {
+        // Loop through the `zettel` object to find the first file
+        for (let folder in zettel) {
+            for (let file in zettel[folder]) {
+                try {
+                    const content = await loadFile(folder, file);
+                    editor.getDoc().setValue(content);
+                    editor.currentFolder = folder;
+                    editor.currentFile = file;
+                    editor.focus();
+                    return; // Stop after the first file is opened
+                } catch (error) {
+                    console.error("Failed to open first file:", error);
+                }
             }
         }
     }
