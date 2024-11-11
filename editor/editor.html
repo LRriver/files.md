@@ -68,7 +68,6 @@
     editor.hmdResolveURL = function (path) {
         const match = path.match(/^img\/(.+\.(png|jpg|jpeg|gif))$/i);
 
-        console.log(zettel);
         if (match && zettel['img'] && zettel['img'][match[1]]) {
             return zettel['img'][match[1]].url;
         }
@@ -277,7 +276,6 @@
                 content = content.slice(`# ${header}`.length).trimStart();
             }
 
-            console.log('SAVING', folder, filename, content.substring(0, 30));
             const writable = await fileData.handle.createWritable();
             await writable.write(content);
             await writable.close();
