@@ -17,6 +17,8 @@
         var imgRE = /\bimage-marker\b/;
         var urlRE = /\bformatting-link-string\b/; // matches the parentheses
         if (imgRE.test(token.type) && token.string === "!") {
+            console.log('tried loading', title);
+
             var lineNo = stream.lineNo;
             // find the begin and end of url part
             var url_begin = stream.findNext(urlRE);
@@ -48,10 +50,12 @@
                     replacedWith: img,
                 });
                 img.addEventListener('load', function () {
+                    console.log("IMAGE LOAD");
                     img.classList.remove("hmd-image-loading");
                     marker.changed();
                 }, false);
                 img.addEventListener('error', function () {
+                    console.log("IMAGE ERROR");
                     img.classList.remove("hmd-image-loading");
                     img.classList.add("hmd-image-error");
                     marker.changed();

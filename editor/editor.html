@@ -137,7 +137,7 @@
             console.log(`Auto-saved ${editor.currentFile}`);
         }
     });
-    editor.setOption("viewportMargin", Infinity); // All content should be searchable
+    editor.setOption("viewportMargin", Infinity);
     editor.on("paste", async (_, event) => {
         const items = (event.clipboardData || event.originalEvent.clipboardData).items;
         for (const item of items) {
@@ -315,6 +315,10 @@
         editor.getDoc().setValue(content);
         editor.clearHistory();
 
+        const MAX_CHARS_TO_SET_CURSOR = 2000;
+        if (content.length > MAX_CHARS_TO_SET_CURSOR) {
+            return
+        }
         const lastLine = editor.lastLine();
         let targetLine = lastLine;
         for (let i = lastLine; i >= 0; i--) {
