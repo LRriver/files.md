@@ -1,7 +1,7 @@
 // HyperMD, copyright (c) by laobubu
 // Distributed under an MIT license: http://laobubu.net/HyperMD/LICENSE
 //
-// DESCRIPTION: Fold and render emoji :smile:
+// DESCRIPTION: Fold and render links
 //
 
 (function (mod){ //[HyperMD] UMD patched!

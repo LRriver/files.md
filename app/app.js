@@ -23,6 +23,14 @@ function initHyperMD(el) {
         }
     });
     editor.setSize(null, "100%");
+
+    editor.addKeyMap({
+        'Cmd-Y': function(cm) {
+            cm.replaceSelection('✅');
+            cm.focus();
+        }
+    });
+
     editor.hmdResolveURL = function (path) {
         if (typeof path === 'undefined') {
             return path
@@ -569,7 +577,6 @@ window.addEventListener('popstate', (event) => {
     // event.preventDefault();
     const state = event.state; // Get the state object
     if (state) {
-        console.log("POP", state)
         showFile(state['folder'], state['file'], false);
     }
 });
