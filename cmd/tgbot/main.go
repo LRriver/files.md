@@ -137,19 +137,25 @@ func main() {
 		if !exists {
 			userCh = make(chan tgbotapi.Update, 100)
 			userChannels[userID] = userCh
-			// Start per-user worker if none is running
-			go func() {
-				defer func() {
-					err := recover()
-					if err != nil {
-						slog.Error("Bot panic", "err", err, "stacktrace", string(debug.Stack()))
-					}
-				}()
-
-				processUserUpdates(userCh, telegram, infolog)
-			}()
+			go supervisor(userID, userCh, telegram, infolog)
 		}
 
 		userCh <- update
+	}
+}
+
+// Runs per-user worker that listens for updates.
+// Restarts infinitely upon panics.
+func supervisor(userID int64, updates <-chan tgbotapi.Update, telegram *tg.TG, infolog *slog.Logger) {
+	for {
+		func() {
+			defer func() {
+				if err := recover(); err != nil {
+					slog.Error("Worker panic v2", "userID", userID, "err", err, "stacktrace", string(debug.Stack()))
+				}
+			}()
+			processUserUpdates(updates, telegram, infolog)
+		}()
+		slog.Info("Restarting worker", "userID", userID)
 	}
 }
