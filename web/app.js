@@ -408,7 +408,7 @@ function openSearchModal() {
         );
     focusedItemIndex = -1;
     const goToFileResults = document.getElementById('goToFileResults');
-    goToFileResults.innerHTML = ''; // Clear all existing <li> element
+    goToFileResults.innerHTML = '';
 }
 
 document.addEventListener('keydown', (event) => {
@@ -430,49 +430,110 @@ function closeSearchModal() {
 }
 
 function similarity(s1, s2) {
-    let longer = s1.toLowerCase();
-    let shorter = s2.toLowerCase();
-    if (s1.length < s2.length) {
-        longer = s2;
-        shorter = s1;
-    }
-    let longerLength = longer.length;
-    if (longerLength === 0) {
-        return 1;
-    }
+    const distance = levenshtein(s1.toLowerCase(), s2.toLowerCase());
+    const maxLength = Math.max(s1.length, s2.length);
 
-    if (longer.includes(shorter)) {
-        return 1;
-    }
+    if (maxLength === 0) return 100;
 
-    return (longerLength - editDistance(longer, shorter)) / parseFloat(longerLength);
+    const similarity = (1 - distance / maxLength) * 100;
+
+    return similarity.toFixed(2);
 }
 
-function editDistance(s1, s2) {
-    s1 = s1.toLowerCase();
-    s2 = s2.toLowerCase();
+function levenshtein(s1, s2) {
+    if (s1 === s2) {
+        return 0;
+    }
+    var n = s1.length, m = s2.length;
+    if (n === 0 || m === 0) {
+        return n + m;
+    }
+    var x = 0, y, a, b, c, d, g, h, k;
+    var p = new Array(n);
+    for (y = 0; y < n;) {
+        p[y] = ++y;
+    }
 
-    let costs = [];
-    for (let i = 0; i <= s1.length; i++) {
-        let lastValue = i;
-        for (let j = 0; j <= s2.length; j++) {
-            if (i === 0)
-                costs[j] = j;
+    for (; (x + 3) < m; x += 4) {
+        var e1 = s2.charCodeAt(x);
+        var e2 = s2.charCodeAt(x + 1);
+        var e3 = s2.charCodeAt(x + 2);
+        var e4 = s2.charCodeAt(x + 3);
+        c = x;
+        b = x + 1;
+        d = x + 2;
+        g = x + 3;
+        h = x + 4;
+        for (y = 0; y < n; y++) {
+            k = s1.charCodeAt(y);
+            a = p[y];
+            if (a < c || b < c) {
+                c = (a > b ? b + 1 : a + 1);
+            }
             else {
-                if (j > 0) {
-                    let newValue = costs[j - 1];
-                    if (s1.charAt(i - 1) != s2.charAt(j - 1))
-                        newValue = Math.min(Math.min(newValue, lastValue),
-                            costs[j]) + 1;
-                    costs[j - 1] = lastValue;
-                    lastValue = newValue;
+                if (e1 !== k) {
+                    c++;
                 }
             }
+
+            if (c < b || d < b) {
+                b = (c > d ? d + 1 : c + 1);
+            }
+            else {
+                if (e2 !== k) {
+                    b++;
+                }
+            }
+
+            if (b < d || g < d) {
+                d = (b > g ? g + 1 : b + 1);
+            }
+            else {
+                if (e3 !== k) {
+                    d++;
+                }
+            }
+
+            if (d < g || h < g) {
+                g = (d > h ? h + 1 : d + 1);
+            }
+            else {
+                if (e4 !== k) {
+                    g++;
+                }
+            }
+            p[y] = h = g;
+            g = d;
+            d = b;
+            b = c;
+            c = a;
         }
-        if (i > 0)
-            costs[s2.length] = lastValue;
     }
-    return costs[s2.length];
+
+    for (; x < m;) {
+        var e = s2.charCodeAt(x);
+        c = x;
+        d = ++x;
+        for (y = 0; y < n; y++) {
+            a = p[y];
+            if (a < c || d < c) {
+                d = (a > d ? d + 1 : a + 1);
+            }
+            else {
+                if (e !== s1.charCodeAt(y)) {
+                    d = c + 1;
+                }
+                else {
+                    d = c;
+                }
+            }
+            p[y] = d;
+            c = a;
+        }
+        h = d;
+    }
+
+    return h;
 }
 
 function filterFiles() {
@@ -484,10 +545,10 @@ function filterFiles() {
 
     let results = [];
 
-    // Lev distance
+    // Levenshtein distance
     searchList.forEach(({filename, folder}) => {
-        const baseFilename = filename.replace(/\.md$/, "");
-        let similarityScore = similarity(search, baseFilename) * 100;
+        const potentialMatch = filename.replace(/\.md$/, "");
+        let similarityScore = similarity(search, potentialMatch);
         if (similarityScore >= 70) {
             if (lowPriorityFolders.includes(folder)) {
                 similarityScore -= 30;
@@ -496,26 +557,26 @@ function filterFiles() {
         }
     });
 
+    // Substring
     searchList.forEach(({filename, folder}) => {
-        const baseFilename = filename.replace(/\.md$/, "");
-        const isSubstringMatch = baseFilename.toLowerCase().includes(search.toLowerCase());
-        if (isSubstringMatch) {
-            const unmatchedLength = baseFilename.length - search.length;
-            const maxScore = 100;
-
-            const score = Math.max(0, maxScore - (unmatchedLength / baseFilename.length) * maxScore);
-            results.push({
-                filename: filename,
-                folder: folder,
-                score: Math.round(score)
-            });
+        const potentialMatch = filename.replace(/\.md$/, "");
+        const isSubstringMatch = potentialMatch.toLowerCase().includes(search.toLowerCase());
+        if (!isSubstringMatch) {
+            return;
         }
+
+        let matchedPercent = search.length / potentialMatch.length * 100;
+        results.push({
+            filename: filename,
+            folder: folder,
+            score: Math.round(matchedPercent)
+        });
     });
 
     const uniqueResultsMap = new Map();
     for (let i = 0; i < results.length; i++) {
         const item = results[i];
-        const key = `${item.filename}-${item.folder}`; // Create a unique key based on filename and folder
+        const key = `${item.filename}-${item.folder}`;
 
         if (!uniqueResultsMap.has(key) || uniqueResultsMap.get(key).score < item.score) {
             uniqueResultsMap.set(key, item);
@@ -544,6 +605,7 @@ function filterFiles() {
         };
         list.appendChild(listItem);
     });
+
 
     focusedItemIndex = 0;
     updateFocusedItem(list.querySelectorAll('li'));
