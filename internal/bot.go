@@ -472,6 +472,7 @@ func (b *Bot) answerSearch(u Update) error {
 	if !ok {
 		return nil
 	}
+	query = strings.TrimSpace(query)
 
 	if strings.Contains(query, "../") || strings.Contains(query, "/..") {
 		return fmt.Errorf("insecure input '%s': %w", query, errInvalidInlineQuery)
@@ -499,6 +500,12 @@ func (b *Bot) answerSearch(u Update) error {
 
 	queryID, _ := u.InlineQueryID()
 	nextOffset := strconv.Itoa(u.InlineQueryOffset() + maxInlineResults)
+
+	// First element is usually the file itself, exclude it
+	if len(query) == 0 {
+		results = results[1:]
+	}
+
 	err = b.tg.AnswerInlineQuery(queryID, results, inlineResultsCacheTime, nextOffset)
 	// FakeTG library has a bug of unmarshalling sent result, we'll mute that temporarily
 	if err != nil && !strings.HasSuffix(err.Error(), "Go value of type tgbotapi.Message") {
