@@ -15,7 +15,7 @@
 //     ...
 //   ]
 // }
-let files = [];
+let files= [];
 const supportedFileTypes = ['md', 'txt', 'png', 'jpg', 'jpeg', 'webp', 'gif',];
 const nonTextDirs = ['img'];
 const systemDirs = ["img", "archive", "_read_", "_watch_", "_shop_", "today", "later", "journal", "habits", "triggers", "places"];
@@ -30,10 +30,12 @@ let changesPollingInterval;
 
 async function init(el) {
     initEditor(el);
-    buildSidebar();
+
     const savedDirectoryHandle = await getSavedDirectoryHandle();
-    if (!(savedDirectoryHandle instanceof FileSystemDirectoryHandle)) {
-        document.getElementById('welcome').style.display = 'flex';
+    const userHasOpenedDirectory = savedDirectoryHandle instanceof FileSystemDirectoryHandle;
+    if (!userHasOpenedDirectory) {
+        files = defaultFiles;
+        buildSidebar();
         return;
     }
 
@@ -41,6 +43,7 @@ async function init(el) {
     if (permission !== 'granted') {
         document.getElementById('welcome').style.display = 'flex';
     }
+
     files = await loadFiles(savedDirectoryHandle);
     changesPollingInterval = setInterval(async function() {
         // console.time("loadFiles Execution Time");
@@ -293,9 +296,16 @@ async function showRandomFile() {
 async function showFile(dir, filename, saveToHistory = true) {
     filename = filename.normalize("NFC");
     const fileData = files[dir][filename];
-    const file = await fileData.handle.getFile();
+
     const header = filename.replace(/\.md$/, "").replace(/^\w/, (c) => c.toUpperCase());
-    let content = await file.text();
+    let content = "";
+    if (fileData.handle !== undefined) {
+        const file = await fileData.handle.getFile();
+        content = await file.text();
+    } else {
+        content = fileData.content;
+    }
+
     content = `# ${header}\n${content}`;
     // Replace extended links with just link
     content = content.replace(/\[\[(.+?)\|.*?\]\]/g, '[[$1]]');
