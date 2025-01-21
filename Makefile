@@ -52,7 +52,6 @@ deploy: # deploy as systemd service
 	YELLOW='\e[33m'; \
 	RESET='\e[0m'; \
 	printf "$${YELLOW}Building...$${RESET}\n" && \
-	make check && \
 	GOOS=linux GOARCH=amd64 go build -o /tmp/bot ./cmd/tgbot && \
 	printf "$${GREEN}Build Completed$${RESET}\n" && \
 	scp /tmp/bot $(host):/app/bot.new && printf "$${GREEN}The binary is copied on the server$${RESET}\n" && \

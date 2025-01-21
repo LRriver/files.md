@@ -881,11 +881,12 @@ func (b *Bot) ShowToday(_ []string) error {
 		kb.AddRow(btn)
 	}
 
-	kb.AddRow(tg.NewBtn("🤸‍♂️", tg.NewCmd(consts.CmdDoNothing, nil)))
-	kb.AddRow(tg.NewBtn("🍽", tg.NewCmd(consts.CmdDoNothing, nil)))
-	kb.AddRow(tg.NewBtn("🚶‍♂️", tg.NewCmd(consts.CmdDoNothing, nil)))
-	kb.AddRow(tg.NewBtn("📵", tg.NewCmd(consts.CmdDoNothing, nil)))
-	kb.AddRow(tg.NewBtn("💪", tg.NewCmd(consts.CmdDoNothing, nil)))
+	row := tg.NewRow()
+	row = append(row, tg.NewBtn("🤸‍♂️", tg.NewCmd(consts.CmdDoNothing, nil)))
+	row = append(row, tg.NewBtn("🍽", tg.NewCmd(consts.CmdDoNothing, nil)))
+	row = append(row, tg.NewBtn("🚶‍♂️", tg.NewCmd(consts.CmdDoNothing, nil)))
+	row = append(row, tg.NewBtn("📵", tg.NewCmd(consts.CmdDoNothing, nil)))
+	row = append(row, tg.NewBtn("💪", tg.NewCmd(consts.CmdDoNothing, nil)))
 
 	quickBtns := b.quickBtns()
 	if len(quickBtns) > 0 {
