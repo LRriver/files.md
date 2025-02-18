@@ -6166,7 +6166,9 @@
       makeChange(this, {from: top, to: Pos(last, getLine(this, last).text.length),
                         text: this.splitLines(code), origin: "setValue", full: true}, true);
       if (this.cm) { scrollToCoords(this.cm, 0, 0); }
-      setSelection(this, simpleSelection(top), sel_dontScroll);
+      // CHANGED we don't set cursor to avoid cursor blinking at the top of the page.
+      // After this method we place cursor at the end.
+      // setSelection(this, simpleSelection(top), sel_dontScroll);
     }),
     replaceRange: function(code, from, to, origin) {
       from = clipPos(this, from);
