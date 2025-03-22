@@ -335,7 +335,7 @@ func Sync(w http.ResponseWriter, r *http.Request) {
 	filesToSync := make([]FileInfo, 0)
 
 	// Resolve the symlink if needed
-	realStorageDir, err := filepath.EvalSymlinks(StorageDir)
+	realStorageDir, err = filepath.EvalSymlinks(StorageDir)
 	if err != nil {
 		log.Printf("Warning: Could not resolve symlink: %v. Using original path.", err)
 		realStorageDir = StorageDir
