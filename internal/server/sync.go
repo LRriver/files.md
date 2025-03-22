@@ -126,7 +126,7 @@ func AuthMiddleware(next http.HandlerFunc) http.HandlerFunc {
 }
 
 // HandleGetTimestamps handles the endpoint for getting current timestamps
-func HandleGetTimestamps(w http.ResponseWriter, r *http.Request) {
+func Timestamps(w http.ResponseWriter, r *http.Request) {
 	// Auth check is now handled by middleware
 	// Get the latest timestamps for all directories and files
 	timestamps, err := getDirectoryTimestamps(StorageDir)
@@ -152,7 +152,7 @@ func HandleGetTimestamps(w http.ResponseWriter, r *http.Request) {
 }
 
 // HandleSync processes a bulk sync request
-func HandleSync(w http.ResponseWriter, r *http.Request) {
+func Sync(w http.ResponseWriter, r *http.Request) {
 	// Auth check is now handled by middleware
 
 	// Only allow POST method
