@@ -102,27 +102,34 @@ async function loadLocalFiles(dirHandle) {
 async function syncWithServer() {
     console.log("Starting sync with server...");
 
-    // Send locally modified files and timestamps of last seen dirs from server
-    let filesToSend = [];
-    filesToSend = await collectModifiedFiles();
-    let response = await fetch('https://habits.files.md/sync', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json', 'Authorization': localStorage.getItem('token')},
-        body: JSON.stringify({
-            files: filesToSend, // files that I have
-            timestamps: filesMetadata['timestamps'] || [], // last seen server dir timestamps
-        })
-    });
-    if (!response.ok) {
-        console.log(`Server responded with ${response.status}`);
-        return
+    // Send locally modified files and timestamps of last seen dirs from the server
+    let server = {};
+    let filesToSend = await collectModifiedFiles();
+    try {
+        let response = await fetch('https://habits.files.md/sync', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'Authorization': localStorage.getItem('token')},
+            body: JSON.stringify({
+                files: filesToSend,
+                timestamps: filesMetadata['timestamps'] || [],
+            })
+        });
+        if (!response.ok) {
+            console.log(`Server responded with ${response.status}`);
+            return;
+        }
+
+        server = await response.json();
+    } catch (error) {
+        console.error("Network error occurred:", error.message);
+        return;
     }
 
-    const server = await response.json();
+    // Write files received from the server
     for (const fileInfo of server.files) {
         const {path, content, lastModified} = fileInfo;
 
-        // What about more than 2 levels nested?
+        // TODO What about more than 2 levels nested?
         let dir, filename;
         if (path.includes('/')) {
             const parts = path.split('/');
@@ -143,7 +150,7 @@ async function syncWithServer() {
             }
         }
 
-        // TODO create dirs if not exist
+        // TODO create dirs if not exist?
         console.log("Syncing " + filename);
         let fileHandle;
         try {
