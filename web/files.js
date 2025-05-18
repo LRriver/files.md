@@ -357,7 +357,7 @@ function saveLastModified(path, lastModified) {
     const dir = parts.join('/');
 
     // TODO what if missing?
-    filesMetadata['files'][dir][filename][lastModified] = lastModified;
+    filesMetadata['files'][dir][filename]['lastModified'] = lastModified;
     saveMetadata();
 }
 
