@@ -3241,7 +3241,7 @@
     var rightSide = Math.max(display.sizerWidth, displayWidth(cm) - display.sizer.offsetLeft) - padding.right;
     var docLTR = doc.direction == "ltr";
 
-    function drawRect(left, top, width, bottom) {
+    function drawSelectionRect(left, top, width, bottom) {
       if (top < 0) { top = 0; }
       top = Math.round(top);
       bottom = Math.round(bottom);
@@ -3278,7 +3278,7 @@
           var openRight = (docLTR ? openEnd : openStart) && last;
           var left = openLeft ? leftSide : (ltr ? fromPos : toPos).left;
           var right = openRight ? (ltr ? toPos : fromPos).right : (ltr ? toPos : fromPos).right;
-          drawRect(left, fromPos.top, right - left, fromPos.bottom);
+          drawSelectionRect(left, fromPos.top, right - left, fromPos.bottom);
         } else { // Multiple lines
           var topLeft, topRight, botLeft, botRight;
           if (ltr) {
@@ -3298,7 +3298,7 @@
           let firstVisualLine = getVisualLines(cm, firstLine)[0];
           let firstLineRight = wrapXObj(cm, lineObj, firstVisualLine.startChar, dir, "before");
           let firstLineLeft = wrapXObj(cm, lineObj, firstVisualLine.endChar, dir, "after");
-          drawRect(fromPos.left, fromPos.top, firstLineRight - firstLineLeft, fromPos.bottom);
+          drawSelectionRect(fromPos.left, fromPos.top, firstLineRight - firstLineLeft, fromPos.bottom);
 
           // Draw in-between lines
           let areThereInBetweenLines = fromPos.bottom < toPos.top
@@ -3321,7 +3321,7 @@
                 // Only draw segments that are within our vertical selection range
                 if (segmentStartCoords.bottom > fromPos.bottom && segmentStartCoords.top < toPos.top) {
                   let width = left - right;
-                  drawRect(right, segmentStartCoords.top, width, segmentStartCoords.top + cm.defaultTextHeight());
+                  drawSelectionRect(right, segmentStartCoords.top, width, segmentStartCoords.top + cm.defaultTextHeight());
                 }
               });
             }
@@ -3331,7 +3331,7 @@
           let lastLine = cm.lineAtHeight(toPos.top, "div")
           let lastVisualLine = getVisualLines(cm, lastLine).pop();
           let lastLineLeft = wrapXObj(cm, lineObj, lastVisualLine.endChar, dir, "after");
-          drawRect(lastLineLeft, toPos.top, toPos.right - lastLineLeft, toPos.bottom);
+          drawSelectionRect(lastLineLeft, toPos.top, toPos.right - lastLineLeft, toPos.bottom);
 
           // Above we implemented character-based selection highlighting.
           // Before it was like that, full-width highlighting:
@@ -3361,10 +3361,10 @@
       let rightStart = drawForLine(sTo.line, isCollapsed ? 0 : null, sTo.ch).start;
       if (isCollapsed) {
         if (leftEnd.top < rightStart.top - 2) {
-          drawRect(leftEnd.right, leftEnd.top, null, leftEnd.bottom);
-          drawRect(leftSide, rightStart.top, rightStart.left, rightStart.bottom);
+          drawSelectionRect(leftEnd.right, leftEnd.top, null, leftEnd.bottom);
+          drawSelectionRect(leftSide, rightStart.top, rightStart.left, rightStart.bottom);
         } else {
-          drawRect(leftEnd.right, leftEnd.top, rightStart.left - leftEnd.right, leftEnd.bottom);
+          drawSelectionRect(leftEnd.right, leftEnd.top, rightStart.left - leftEnd.right, leftEnd.bottom);
         }
       }
 
@@ -3383,7 +3383,7 @@
             let left = wrapXObj(cm, line, visualLine.startChar, 'ltr', "before");
             let right = wrapXObj(cm, line, visualLine.endChar, 'ltr', "after");
             let width = left - right ;
-            drawRect(right, firstCharPos.top, width, firstCharPos.bottom);
+            drawSelectionRect(right, firstCharPos.top, width, firstCharPos.bottom);
           });
         }
       }

@@ -594,11 +594,25 @@
 .cm-s-hypermd-light img.hmd-image {
     vertical-align: middle;
     width: auto;
-    max-width: 400px; /* CHANGED */
     height: auto;
-    display: block;
-    margin: 0 auto;
+
+    /*CHANGED*/
+    max-width: 400px;
+    display: inline-block;
 }
+
+.CodeMirror-widget {
+    /*CHANGED, all lines*/
+    margin-left: 24%;
+    transform: translateX(-24%);
+}
+
+/*CHANGED, if z-index is 2, then our section block is below the image*/
+.CodeMirror pre.CodeMirror-line,
+.CodeMirror pre.CodeMirror-line-like {
+    z-index: 0;
+}
+
 .cm-s-hypermd-light img.hmd-image.hmd-image-loading, .cm-s-hypermd-light img.hmd-image.hmd-image-error {
     min-width: 24px;
     min-height: 24px;
