@@ -1,10 +1,10 @@
 :root {
     --font: Inter,Arial,Helvetica,sans-serif;
+    --color-bg: #FFF;
+    --color-bg-alt: #F8F8F7;
     --color-inline-code: #657b83;
     --color-inline-code-bg: #d8dae0;
     --color-tx-hover: #37618e;
-
-    --color-bg-alt: #fff;
 }
 
 

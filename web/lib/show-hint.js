@@ -353,6 +353,14 @@
             }
         });
 
+        // CHANGED, change active element on hover
+        CodeMirror.on(hints, "mousemove", function(e) {
+            var t = getHintElement(hints, e.target || e.srcElement);
+            if (t && t.hintId != null) {
+                widget.changeActive(t.hintId);
+            }
+        });
+
         CodeMirror.on(hints, "mousedown", function() {
             setTimeout(function(){cm.focus();}, 20);
         });
