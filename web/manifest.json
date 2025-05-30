@@ -3,8 +3,8 @@
   "short_name": "Files.md (Alpha version)",
   "start_url": "https://app.files.md",
   "display": "standalone",
-  "background_color": "#FFFCF0",
-  "theme_color": "#F2F0E6",
+  "background_color": "#F8F8F7",
+  "theme_color": "red",
   "icons": [
     {
       "src": "icon.png",
