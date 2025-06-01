@@ -3,7 +3,8 @@ const saverInterval = 1000; // ms, how often to save currently open file
 const loaderInterval = 3000; // ms, how often to load current file from local file system
 
 let isSaving = false;
-let isSyncing = false
+let isSyncing = false;
+let isSyncingCurrent = false;
 
 // Files structure:
 // {
@@ -527,6 +528,11 @@ function saveMetadata() {
 // 2) Sync it with the server
 // TODO add hash of last read file comparison, merge on conflict (in which scenarious in can happen tho?)
 async function syncCurrentFile() {
+    if (isSyncingCurrent) {
+        return;
+    }
+    isSyncingCurrent = true;
+
     if (debug) {
         return;
     }
@@ -596,6 +602,7 @@ async function syncCurrentFile() {
     }
 
     // await syncFileWithServer(editor.currentDir, editor.currentFile);
+    isSyncingCurrent = false;
 }
 
 function hash(str) {
