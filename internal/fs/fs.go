@@ -71,6 +71,7 @@ type File struct {
 	ParentDir   string
 }
 
+// NewUserFS creates a new FS for a specific user with os.FS backend.
 func NewUserFS(userID int64) (*FS, error) {
 	userAbsPath := path.Join(config.BotCfg.StorageDir, txt.I64(userID))
 	backend := afero.NewOsFs()
@@ -78,19 +79,19 @@ func NewUserFS(userID int64) (*FS, error) {
 	return NewFS(userAbsPath, backend)
 }
 
-func NewFS(absUserRootPath string, backend afero.Fs) (*FS, error) {
-	exists, err := afero.Exists(backend, absUserRootPath)
+func NewFS(absRootPath string, backend afero.Fs) (*FS, error) {
+	exists, err := afero.Exists(backend, absRootPath)
 	if err != nil {
 		return nil, fmt.Errorf("new fs: %w", err)
 	}
 	if !exists {
-		err = backend.Mkdir(absUserRootPath, 0o755)
+		err = backend.Mkdir(absRootPath, 0o755)
 		if err != nil {
 			return nil, fmt.Errorf("new fs: %w", err)
 		}
 	}
 
-	return &FS{absUserRootPath, backend}, nil
+	return &FS{absRootPath, backend}, nil
 }
 
 func NewFile(name, hash, title string, ctime int64, isMultiline, isDir bool, parentDir string) File {

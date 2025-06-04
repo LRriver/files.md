@@ -8,19 +8,15 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"path"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/spf13/afero"
 
 	"zakirullin/stuffbot/config"
 	"zakirullin/stuffbot/internal/fs"
 	"zakirullin/stuffbot/internal/habits"
 	"zakirullin/stuffbot/internal/journal"
 	"zakirullin/stuffbot/internal/userconfig"
-	"zakirullin/stuffbot/pkg/txt"
 )
 
 // TODO release graceful shutdown etc
@@ -65,8 +61,7 @@ func newRouter(logger *log.Logger) *http.ServeMux {
 			_, _ = w.Write([]byte("can't parse userID"))
 		}
 
-		userPath := path.Join(config.BotCfg.StorageDir, txt.I64(userID))
-		userFS, err := fs.NewFS(userPath, afero.NewOsFs())
+		userFS, err := fs.NewUserFS(userID)
 		if err != nil {
 			logger.Printf("failed to init userFS: %v", err)
 			_, _ = w.Write([]byte("can't init userFS"))
@@ -104,8 +99,7 @@ func newRouter(logger *log.Logger) *http.ServeMux {
 
 		habitName := r.PathValue("habitName")
 
-		userPath := path.Join(config.BotCfg.StorageDir, txt.I64(userID))
-		userFS, err := fs.NewFS(userPath, afero.NewOsFs())
+		userFS, err := fs.NewUserFS(userID)
 		if err != nil {
 			logger.Printf("failed to init user fs: %v", err)
 			_, _ = w.Write([]byte("can't init user fs"))
