@@ -3,6 +3,7 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -212,7 +213,7 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 
 	// TODO if no clientFile, severContent = ""
 	serverContent, err := userFS.Read("", path)
-	if err != nil && !os.IsNotExist(err) {
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		log.Printf("Error reading one clientFile '%s': %v", path, err)
 		http.Error(w, "Error reading server clientFile", http.StatusBadRequest)
 		return
@@ -220,7 +221,7 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 
 	ctime, err := userFS.Ctime("", path)
 	if err != nil {
-		if !os.IsNotExist(err) {
+		if !errors.Is(err, os.ErrNotExist) {
 			log.Printf("Error getting ctime for clientFile '%s': %v", path, err)
 			http.Error(w, "Error getting ctime for clientFile", http.StatusBadRequest)
 			return

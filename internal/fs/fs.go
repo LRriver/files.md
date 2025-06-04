@@ -24,6 +24,7 @@ import (
 )
 
 var (
+	NewUserFS       = newUserFS
 	errUnsafePath   = errors.New("unsafe path, possible security issue")
 	errCannotUnhash = errors.New("cannot unhash, maybe the file is missing")
 )
@@ -70,8 +71,8 @@ type File struct {
 	ParentDir   string
 }
 
-// NewUserFS creates a new FS for a specific user with os.FS backend.
-func NewUserFS(userID int64) (*FS, error) {
+// newUserFS creates a new FS for a specific user with os.FS backend.
+func newUserFS(userID int64) (*FS, error) {
 	userAbsPath := path.Join(config.BotCfg.StorageDir, txt.I64(userID))
 	backend := afero.NewOsFs()
 
