@@ -306,7 +306,6 @@ a:hover {
     color: transparent; /* Backup to hide the character */
 }
 
-
 /*Hide bulletpoints when tasks*/
 .cm-formatting-list-ul:has(+ .cm-formatting-task) {
     width: 0;
@@ -316,6 +315,7 @@ a:hover {
     display: none;
     width: 0;
 }
+
 .cm-formatting-list-ul:has(+ .cm-formatting-task) + .cm-formatting-task {
     margin-left: -24px; /* Negative margin equal to the width of the ::before element */
 }
@@ -325,11 +325,12 @@ a:hover {
     display: none !important;
 }
 
-/*Hide (...) in links*/
-.CodeMirror span.hmd-hidden-token.cm-formatting-link-string, .CodeMirror span.hmd-hidden-token.cm-url {
+/*Hide (...) in links. Don't hide links after images*/
+.CodeMirror span:not(:has(.cm-image)) > span.cm-url.hmd-hidden-token.cm-url {
     display: inline;
     font-size: 1px !important;
     letter-spacing: -1ch;
     font-family: monospace;
     color: transparent;
 }
+
