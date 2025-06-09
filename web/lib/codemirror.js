@@ -3176,23 +3176,34 @@
   // Draws a cursor for the given range
   // PATCHED, cursor height without padding
   function drawSelectionCursor(cm, head, output) {
-    var pos = cursorCoords(cm, head, "div", null, null, !cm.options.singleCursorHeightPerLine);
+    let pos = cursorCoords(cm, head, "div", null, null, !cm.options.singleCursorHeightPerLine);
 
-    var cursor = output.appendChild(elt("div", "\u00a0", "CodeMirror-cursor"));
+    let cursor = output.appendChild(elt("div", "\u00a0", "CodeMirror-cursor"));
     cursor.style.left = pos.left + "px";
 
     // Get the line element to measure actual text properties
-    var lineView = findViewForLine(cm, head.line);
-    var lineElement = lineView && lineView.text;
+    let lineView = findViewForLine(cm, head.line);
+    let lineElement = lineView && lineView.text;
 
     if (lineElement) {
-      var style = window.getComputedStyle(lineElement);
-      var paddingTop = parseFloat(style.paddingTop) || 0;
-      var fontSize = parseFloat(style.fontSize) || textHeight(cm.display);
-      var lineHeight = parseFloat(style.lineHeight) || fontSize;
+      let style = window.getComputedStyle(lineElement);
+
+      let paddingTop = parseFloat(style.paddingTop) || 0;
+      // If it's not the first visual line, don't apply padding
+      let token = cm.getTokenAt(head);
+      let isHeader = token && token.type && token.type.includes('header');
+      let visualLines = getVisualLines(cm, head.line);
+      console.log(head, visualLines[1]);
+      let cursorIsNotAtFirstVisualLine = visualLines.length > 1 && head.ch >= visualLines[1].startChar;
+      if (isHeader && cursorIsNotAtFirstVisualLine) {
+        paddingTop = 0;
+      }
+
+      let fontSize = parseFloat(style.fontSize) || textHeight(cm.display);
+      let lineHeight = parseFloat(style.lineHeight) || fontSize;
 
       // Adjust top to account for padding and center the cursor with the text baseline
-      var textOffset = paddingTop + (lineHeight - fontSize) / 2;
+      let textOffset = paddingTop + (lineHeight - fontSize) / 2;
       cursor.style.top = (pos.top + textOffset - 2) + "px";
       cursor.style.height = (fontSize * cm.options.cursorHeight) + 4 + "px";
     } else {
@@ -3201,23 +3212,23 @@
     }
 
     if (/\bcm-fat-cursor\b/.test(cm.getWrapperElement().className)) {
-      var charPos = charCoords(cm, head, "div", null, null);
-      var width = charPos.right - charPos.left;
+      let charPos = charCoords(cm, head, "div", null, null);
+      let width = charPos.right - charPos.left;
       cursor.style.width = (width > 0 ? width : cm.defaultCharWidth()) + "px";
     }
 
     if (pos.other) {
-      var otherCursor = output.appendChild(elt("div", "\u00a0", "CodeMirror-cursor CodeMirror-secondarycursor"));
+      let otherCursor = output.appendChild(elt("div", "\u00a0", "CodeMirror-cursor CodeMirror-secondarycursor"));
       otherCursor.style.display = "";
       otherCursor.style.left = pos.other.left + "px";
 
       if (lineElement) {
-        var style = window.getComputedStyle(lineElement);
-        var paddingTop = parseFloat(style.paddingTop) || 0;
-        var fontSize = parseFloat(style.fontSize) || textHeight(cm.display);
-        var lineHeight = parseFloat(style.lineHeight) || fontSize;
+        let style = window.getComputedStyle(lineElement);
+        let paddingTop = parseFloat(style.paddingTop) || 0;
+        let fontSize = parseFloat(style.fontSize) || textHeight(cm.display);
+        let lineHeight = parseFloat(style.lineHeight) || fontSize;
 
-        var textOffset = paddingTop + (lineHeight - fontSize) / 2;
+        let textOffset = paddingTop + (lineHeight - fontSize) / 2;
         otherCursor.style.top = (pos.other.top + textOffset) + "px";
         otherCursor.style.height = (fontSize * 0.85) + "px";
       } else {
