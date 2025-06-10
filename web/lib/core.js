@@ -801,7 +801,6 @@
         });
     };
     LineSpanExtractor.prototype.getTokenTypes = function (token, prevToken) {
-        console.log(prevToken, token);
         var prevState = prevToken ? prevToken.state : {};
         var state = token.state;
         var styles = ' ' + token.type + ' ';
@@ -818,10 +817,6 @@
             // code
             code: (state.code ? 1 /* IS_THIS_TYPE */
                 : prevState.code ? 2 /* LEAVING_THIS_TYPE */ : 0 /* NOTHING */),
-            // linkHref
-            linkHref: ((state.linkHref && !state.linkText) ?
-                1 /* IS_THIS_TYPE */ :
-                (!state.linkHref && !state.linkText && prevState.linkHref && !prevState.linkText) ? 2 /* LEAVING_THIS_TYPE */ : 0 /* NOTHING */),
             // task checkbox
             task: (styles.indexOf(' formatting-task ') !== -1)
                 ? (1 /* IS_THIS_TYPE */ | 2 /* LEAVING_THIS_TYPE */)
@@ -833,7 +828,8 @@
 
         let linkText;
         if (state.linkText) {
-            if (state.hmdLinkType === 3 /* NORMAL */ || state.hmdLinkType === 6 /* BARELINK2 */ ) {
+            // PATCHED, add 1 type (barelink)
+            if (state.hmdLinkType === 3 /* NORMAL */ || state.hmdLinkType === 6 /* BARELINK2 */ || state.hmdLinkType === 1) {
                 linkText = 1 /* IS_THIS_TYPE */;
             } else {
                 linkText = 0 /* NOTHING */;
@@ -857,9 +853,7 @@
                 linkHref = 0 /* NOTHING */;
             }
         }
-
-
-
+        ans.linkHref = linkHref;
 
         // if (state)
         console.log("ANswer", state.linkHref, state.linkText, ans);
@@ -882,7 +876,7 @@
         for (var i = 0; i < tokens.length; i++) {
             var token = tokens[i];
             var types = this$1.getTokenTypes(token, tokens[i - 1]);
-            console.log('TYPEAS', types);
+            console.log('TYPES', types);
             for (var type in types) {
                 var span = unclosed[type];
                 if (types[type] & 1 /* IS_THIS_TYPE */ || lineText === '```') { // style is active PATCHED

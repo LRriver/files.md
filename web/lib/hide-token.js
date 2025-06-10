@@ -195,7 +195,6 @@
                 return changed;
             }
             var spans = line_spans_1.getLineSpanExtractor(cm).extract(lineNo);
-            console.log('SPANS', spans);
             var iNodeHint = 0;
             for (var iSpan = 0; iSpan < spans.length; iSpan++) {
                 var span = spans[iSpan];

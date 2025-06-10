@@ -73,8 +73,8 @@ CodeMirror.defineMode("markdown", function(cmCfg, modeCfg) {
     linkInline: "link",
     linkEmail: "link",
     linkText: "link",
-    wikiLinkText: "wiki-link",
     linkHref: "string",
+    wikiLinkText: "wiki-link",
     em: "em",
     strong: "strong",
     strikethrough: "strikethrough",
@@ -510,22 +510,20 @@ CodeMirror.defineMode("markdown", function(cmCfg, modeCfg) {
       return type;
     }
 
+    // PATCHED, wiki links support
     if (ch === '[' && stream.peek() === '[' && !state.image) {
       // Wiki-style link [[page]]
       stream.next(); // consume second [
-      // state.wikiLinkText = true;
       state.linkText = true;
       state.linkHref = true;
       if (modeCfg.highlightFormatting) state.formatting = "link";
-      // return getType(state);
       return 'formatting formatting-link link'
-      // return 'formatting formatting-link wiki-link';
     }
 
+    // PATCHED, wiki links support
     if (ch === ']' && stream.peek() === ']') {
       stream.next(); // consume second ]
       if (modeCfg.highlightFormatting) state.formatting = "link";
-      // var type = getType(state);
       state.linkText = false;
       state.linkHref = false;
       return 'formatting formatting-link link';
