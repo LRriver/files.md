@@ -24,7 +24,7 @@ let isSyncingCurrent = false;
 //   ]
 // }
 let files = [];
-let serverFiles = {files: {}, timestamps: {}, mediaTimestamp: 0};
+let serverFiles = {files: {}, medias: {}, timestamps: {}, mediaTimestamp: 0};
 const SERVER_FILES_STORAGE_KEY = 'files';
 const supportedFileTypes = ['md', 'txt', 'png', 'jpg', 'jpeg', 'webp', 'gif',];
 const systemDirs = ["media", "img", "archive", "_read_", "_watch_", "_shop_", "today", "later", "journal", "habits", "triggers", "places"];
@@ -332,15 +332,15 @@ async function saveMediaFile(path, blob, lastModified) {
         return;
     }
 
+    // Check if file exists already
     try {
         const file = await fileHandle.getFile();
         const fileExists = file.size > 0;
         if (fileExists) {
-            // Is it ok that we save metadata here as well?
-            if (serverFiles['mediaTimestamp'] === undefined || lastModified > serverFiles['mediaTimestamp']) {
-                serverFiles['mediaTimestamp'] = lastModified;
-                saveMetadata();
+            serverFiles['medias'][file.name] = {
+                lastModified: lastModified,
             }
+            saveMetadata();
             console.log(`File ${path} already exists and is up to date, skipping...`);
             return;
         }
@@ -349,20 +349,19 @@ async function saveMediaFile(path, blob, lastModified) {
     }
 
     try {
+        const parts = path.split('/');
+        let filename = parts.pop();
+
         const writable = await fileHandle.createWritable();
         await writable.write(blob);
         await writable.close();
         console.log(`Successfully wrote media file: ${path}`);
-        // TODO we assume that we got no fails. Instead save filenames hashes, same for text
-        if (lastModified > serverFiles['mediaTimestamp']) {
-            serverFiles['mediaTimestamp'] = lastModified;
-            saveMetadata();
+        serverFiles['medias'][filename] = {
+            lastModified: lastModified,
         }
+        saveMetadata();
 
         // Load file handle into files
-        // TODO split path by dir, filename? Not to have this logic
-        const parts = path.split('/');
-        let filename = parts.pop();
         files['media'][filename] = {handle: fileHandle};
         fileHandle.getFile().then(file => {
             files['media'][filename].lastModified = file.lastModified;
