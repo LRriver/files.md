@@ -651,8 +651,8 @@ async function saveTextFile(path, content) {
 
     const fileExists= !await exists([path]);
     if (fileExists || !await isContentEqual(path, content)) {
+        // TODO what if we're syncing first time and already have changes?
         console.log("Hashes do not match, writing file...", path);
-        // TODO rem
         const writable = await fileHandle.createWritable();
         await writable.write(content);
         await writable.close();
