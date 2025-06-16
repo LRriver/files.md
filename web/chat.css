@@ -119,8 +119,7 @@
     width: 100%;
 }
 
-.button-row button,
-.button-container > button {
+.button-container button {
     background-color: var(--color-bg-active);
     flex: 1;
     padding: 10px;
@@ -136,9 +135,8 @@
     font-size: 17px;
 }
 
-.button-row button:hover,
-.button-container > button:hover {
-    background-color: color-mix(in srgb, var(--color-bg-active) 95%, black 5%);
+.button-container button:hover {
+    background-color: color-mix(in srgb, var(--color-bg-active) 95%, black 5%) !important;
 }
 
 .popup {
