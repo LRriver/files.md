@@ -247,7 +247,10 @@ async function syncLocalFileWithServer(dir, filename) {
             return;
         }
         let json = await response.json();
-        if (["updatedOnServer"].includes(json.status)) {
+        if (json.status === 'notModified') {
+            return;
+        }
+        if (json.status === 'updatedOnServer') {
             setMetadata(path, content, json.lastModified);
             console.log(`saved metadata for ${path} with timestamp ${json.lastModified}`);
             saveMetadata();
