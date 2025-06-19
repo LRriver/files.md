@@ -54,7 +54,7 @@ deploy: # deploy as systemd service
 	TIMESTAMP=$$(date +%s); \
 	printf "$${YELLOW}Building...$${RESET}\n" && \
 	printf "$${YELLOW}Versioning current files with: $${TIMESTAMP}$${RESET}\n" && \
-	find . -name "*.html" -exec grep -l "?v=" {} \; | xargs sed -i '' 's/?v=/?v='"$(TIMESTAMP)"'/g' && \
+	find . -name "*.html" -exec grep -l "?v=" {} \; | xargs sed -i '' 's/?v=/?v='"$${TIMESTAMP}"'/g' && \
 	make check && \
 	GOOS=linux GOARCH=amd64 go build -o /tmp/bot ./cmd/tgbot && \
 	printf "$${GREEN}Build Completed$${RESET}\n" && \
@@ -62,11 +62,11 @@ deploy: # deploy as systemd service
 	ssh $(host) "mv /app/bot.new /app/bot && systemctl restart bot.service" && \
 	rm /tmp/bot && \
 	tar --no-xattrs --disable-copyfile --no-fflags -czf web.tar.gz web && \
-	printf "$${GREEN}Removing versioning$${RESET}\n" && \
-	find . -name "*.html" -exec grep -l "?v=$TIMESTAMP" {} \; | xargs sed -i '' 's/?v='"$TIMESTAMP"'/?v=/g' && \
     scp web.tar.gz files:/app/ && \
     ssh files "cd /app && tar -xzf web.tar.gz && rm web.tar.gz" && \
     rm web.tar.gz && \
+	printf "$${GREEN}Removing versioning$${RESET}\n" && \
+	find . -name "*.html" -exec grep -l "?v=$${TIMESTAMP}" {} \; | xargs sed -i '' 's/?v='"$${TIMESTAMP}"'/?v=/g' && \
 	printf "$${GREEN}Successfully deployed!$${RESET}\n"
 
 deploy_binary: # deploy as regular binary
@@ -79,7 +79,7 @@ deploy_binary: # deploy as regular binary
 	printf "$${GREEN}Build Completed$${RESET}\n" && \
 	ssh $(host) "killall bot || true" && \
 	scp /tmp/bot $(host):/app/bot && printf "$${GREEN}The binary is copied on the server$${RESET}\n" && \
-	ssh $(host) "sudo setcap 'cap_net_bind_service=+ep' /app/bot" && \
+  ssh $(host) "sudo setcap 'cap_net_bind_service=+ep' /app/bot" && \
 	ssh $(host) "su -c \"cd /app && nohup ./bot >> /app/log 2>>/app/err &\" -s /bin/sh www-data" && \
 	rm /tmp/bot && \
 	printf "$${GREEN}Successfully deployed!$${RESET}\n"
