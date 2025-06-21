@@ -6,8 +6,10 @@ import (
 	_ "embed"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
 	"os"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -25,6 +27,8 @@ func Serve(apiHost, appHost, certDir, logFilename, token, tokensDir string) {
 	// TODO fix
 	AuthToken = token
 
+	// Logger is used for ssl/connection errors.
+	// For regular errors we still use slog.
 	logger := newLogger(logFilename)
 	srv := ssl(logger, certDir, apiHost, appHost)
 	srv.Handler = newRouter(logger, tokensDir)
@@ -165,11 +169,11 @@ func newRouter(logger *log.Logger, tokensDir string) *http.ServeMux {
 
 	// TODO CHECK that user id belongs to oneTimeToken ID, or get userID by oneTimeToken id
 	// TODO for further safety, remove * cors?
-	r.HandleFunc("/syncTexts", corsMiddleware(authMiddleware(SyncTexts, tokensDir)))
-	r.HandleFunc("/syncText", corsMiddleware(authMiddleware(SyncText, tokensDir)))
-	r.HandleFunc("/syncMedias", corsMiddleware(authMiddleware(SyncMedias, tokensDir)))
-	r.HandleFunc("/syncMedia", corsMiddleware(authMiddleware(SyncMedia, tokensDir)))
-	r.HandleFunc("/token", corsMiddleware(IssueToken))
+	r.HandleFunc("/syncTexts", panicMiddleware(corsMiddleware(authMiddleware(SyncTexts, tokensDir))))
+	r.HandleFunc("/syncText", panicMiddleware(corsMiddleware(authMiddleware(SyncText, tokensDir))))
+	r.HandleFunc("/syncMedias", panicMiddleware(corsMiddleware(authMiddleware(SyncMedias, tokensDir))))
+	r.HandleFunc("/syncMedia", panicMiddleware(corsMiddleware(authMiddleware(SyncMedia, tokensDir))))
+	r.HandleFunc("/token", panicMiddleware(corsMiddleware(IssueToken)))
 
 	return r
 }
@@ -182,4 +186,42 @@ func newLogger(logFilename string) *log.Logger {
 	defer logFile.Close()
 
 	return log.New(logFile, "Server Error: ", log.Ldate|log.Ltime|log.Lshortfile)
+}
+
+func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, Authorization, X-CSRF-OneTimeToken")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next(w, r)
+	}
+}
+
+func panicMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if err := recover(); err != nil {
+				slog.Error("Handler panic",
+					slog.String("method", r.Method),
+					slog.String("path", r.URL.Path),
+					slog.Any("panic", err),
+					slog.String("stack", string(debug.Stack())),
+				)
+
+				if w.Header().Get("Content-Type") == "" {
+					w.Header().Set("Content-Type", "application/json")
+				}
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte(`{"error":"Internal server error"}`))
+			}
+		}()
+
+		next(w, r)
+	}
 }
