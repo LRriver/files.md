@@ -534,25 +534,25 @@ func (fs FS) Ctime(dir, filename string) (int64, error) {
 // Returns [filename] => ctime
 // TODO add tests
 func (fs FS) Ctimes(dir string) (map[string]int64, error) {
-	dirPath := fs.UnsafePath(DirRoot, dir)
-	isSafe, err := fs.isSafe(dirPath)
+	rootPath := fs.UnsafePath(DirRoot, dir)
+	isSafe, err := fs.isSafe(rootPath)
 	if err != nil {
-		return nil, fmt.Errorf("fs ctimes: can't check if the file is safe to access '%s': %w", dirPath, err)
+		return nil, fmt.Errorf("fs ctimes: can't check if the file is safe to access '%s': %w", rootPath, err)
 	}
 	if !isSafe {
-		return nil, fmt.Errorf("fs ctimes: unsafe dirPath '%s': %w", dirPath, errUnsafePath)
+		return nil, fmt.Errorf("fs ctimes: unsafe rootPath '%s': %w", rootPath, errUnsafePath)
 	}
 
 	timestamps := make(map[string]int64)
 
-	err = afero.Walk(fs.backend, dirPath, func(path string, info os.FileInfo, err error) error {
+	err = afero.Walk(fs.backend, rootPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil
 		}
 
 		base := filepath.Base(path)
 		// Ignore 2nd level nesting
-		if strings.HasPrefix(base, ".") && path != fs.RootPath {
+		if strings.HasPrefix(base, ".") && path != rootPath {
 			if info.IsDir() {
 				return filepath.SkipDir
 			}
