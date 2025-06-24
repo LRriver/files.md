@@ -1,8 +1,21 @@
 const {test, expect} = require('@playwright/test');
+const fs = require('fs').promises;
+const path = require('path');
+const crypto = require('crypto');
 
 test.beforeEach(async ({page}) => {
+    const serverDir = '../storage/-1';
+    await clearDirectory(serverDir);
+
+    const filePath = path.join(serverDir, saltToken('token'));
+    try {
+        await fs.writeFile(filePath, '-1', 'utf8');
+    } catch (error) {
+        console.error('Error creating file:', error);
+    }
+
     await page.addInitScript(() => {
-        window.API_HOST = 'http://localhost:8080'; // Your test server
+        window.API_HOST = 'http://localhost:8080';
         localStorage.setItem('token', 'token');
 
     });
@@ -45,3 +58,31 @@ test('sync', async ({ page }) => {
     await page.pause();
 });
 
+async function clearDirectory(dirPath) {
+    try {
+        const items = await fs.readdir(dirPath);
+
+        for (const item of items) {
+            const itemPath = path.join(dirPath, item);
+            const stat = await fs.stat(itemPath);
+
+            if (stat.isDirectory()) {
+                // Recursively delete subdirectory
+                await fs.rm(itemPath, { recursive: true, force: true });
+            } else {
+                // Delete file
+                await fs.unlink(itemPath);
+            }
+        }
+
+        console.log(`Cleared directory: ${dirPath}`);
+    } catch (error) {
+        console.log(`Error clearing directory ${dirPath}:`, error.message);
+    }
+}
+
+function saltToken(token, salt = "") {
+    return crypto.createHash('sha256')
+        .update(token + salt)
+        .digest('hex');
+}
