@@ -95,7 +95,7 @@ body {
     opacity: 1;
 }
 
-.message:last-child .message-actions {
+.message:first-child .message-actions {
     opacity: 1;
 }
 
@@ -246,4 +246,8 @@ body {
 
 #chat-input::placeholder {
     color: #6b7280;
+}
+
+.CodeMirror-wrap {
+    display: none;
 }

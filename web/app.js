@@ -84,6 +84,7 @@ async function init(el) {
     console.log(`Files loaded in ${performance.now() - perf}ms`);
 
     initChat();
+    initWasm();
 
     perf = performance.now();
     updateSidebar();
@@ -330,7 +331,7 @@ function initEditor(el) {
     }, true);
 }
 
-async function initChat() {
+async function initWasm() {
     console.log('INIT CHAT');
     const go = new Go();
     const wasmFile = await fetch('chat.wasm');
@@ -1161,7 +1162,7 @@ async function openDir() {
     await saveDirectoryHandle(dirHandle);
     sidebarFiles = await loadLocalFiles(dirHandle)
 
-    initChat();
+    initWasm();
 
     // Create welcome markdown file if empty
     if (Object.keys(files).length === 0) {

@@ -1,20 +1,104 @@
-// Global variables
-let currentFile = 'main.txt';
-let sidebarFiles = {
-    'main.txt': [],
-    'journal.txt': [],
-    'shop.txt': [],
-    'read-list.txt': [],
-    'watch-list.txt': [],
-    'ideas.txt': [],
-    'tasks.txt': [],
-    'archive.txt': []
-};
-
 let chatContainer;
 let messageInput;
+const CHAT_FILENAME = 'Chat.txt';
 
-function init() {
+function parseFileContent(content) {
+    const lines = content.split('\n');
+    const messages = [];
+    let currentDate = null;
+
+    for (const line of lines) {
+        const trimmedLine = line.trim();
+        if (!trimmedLine) continue;
+
+        // Check if line is a date header (starts with ####)
+        if (trimmedLine.startsWith('####')) {
+            currentDate = trimmedLine.replace(/^#+\s*/, '').trim();
+            continue;
+        }
+
+        // Check if line is a timestamped message (starts with backtick)
+        const timeMatch = trimmedLine.match(/^`(\d{2}:\d{2})`\s*(.*)$/);
+        if (timeMatch) {
+            const [, timestamp, text] = timeMatch;
+
+            if (text.trim()) {
+                messages.push({
+                    id: Date.now() + Math.random(), // Generate unique ID
+                    text: text.trim(),
+                    timestamp: timestamp,
+                    date: currentDate || new Date().toDateString()
+                });
+            }
+        }
+    }
+
+    return messages;
+}
+
+function formatFileContent(messages) {
+    if (messages.length === 0) return '';
+
+    // Group messages by date
+    const messagesByDate = {};
+    messages.forEach(msg => {
+        const date = msg.date || new Date().toDateString();
+        if (!messagesByDate[date]) {
+            messagesByDate[date] = [];
+        }
+        messagesByDate[date].push(msg);
+    });
+
+    let content = '';
+    Object.entries(messagesByDate).forEach(([date, msgs]) => {
+        if (content) content += '\n';
+        content += `#### ${date}\n`;
+        msgs.forEach(msg => {
+            content += `\`${msg.timestamp}\` ${msg.text}\n`;
+        });
+    });
+
+    return content;
+}
+
+async function loadData() {
+    try {
+        const fileHandle = await getFileHandle(CHAT_FILENAME);
+        const content = await fileHandle.text();
+
+        // Parse the content and load into main.txt for now
+        // You can extend this to support multiple files
+        const messages = parseFileContent(content);
+        sidebarFiles['main.txt'] = messages;
+
+        console.log(`Loaded ${messages.length} messages from ${CHAT_FILENAME}`);
+    } catch (error) {
+        console.error('Error loading data:', error);
+        // Initialize with empty data if file doesn't exist or can't be read
+        sidebarFiles['main.txt'] = [];
+    }
+}
+
+async function saveData() {
+    try {
+        // For now, just save the current file's messages
+        // You can extend this to save all files
+        const content = formatFileContent(sidebarFiles[currentFile]);
+
+        // You'll need to implement the file writing part
+        // This is a placeholder for your file system API
+        console.log('Would save to file:', content);
+
+        // Example of what the save might look like:
+        // const fileHandle = await getFileHandle(CHAT_FILENAME);
+        // await fileHandle.write(content);
+
+    } catch (error) {
+        console.error('Error saving data:', error);
+    }
+}
+
+function initChat() {
     chatContainer = document.getElementById('chat');
     messageInput = document.getElementById('chat-input');
 
@@ -25,8 +109,9 @@ function init() {
         }
     });
 
-    loadData();
-    renderMessages();
+    loadData().then(() => {
+        renderMessages();
+    });
 
     // Notify sidebar about initial state (commented for future implementation)
     // updateSidebar();
@@ -41,11 +126,16 @@ function handleSend() {
     const text = messageInput.value.trim();
     if (!text) return;
 
+    const now = new Date();
     const note = {
         id: Date.now(),
         text: text,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        date: new Date().toISOString()
+        timestamp: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        date: now.toLocaleDateString('en-GB', {
+            day: 'numeric',
+            month: 'long',
+            weekday: 'long'
+        })
     };
 
     sidebarFiles[currentFile].push(note);
@@ -63,39 +153,39 @@ function renderMessages() {
 
     if (messages.length === 0) {
         chatContainer.innerHTML = `
-                    <div class="empty-state">
-                        <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                            <polyline points="14,2 14,8 20,8"/>
-                            <line x1="16" y1="13" x2="8" y2="13"/>
-                            <line x1="16" y1="17" x2="8" y2="17"/>
-                            <polyline points="10,9 9,9 8,9"/>
-                        </svg>
-                        <div class="empty-title">No notes in ${currentFile}</div>
-                        <div class="empty-desc">Start typing to add your first note</div>
-                    </div>
-                `;
+            <div class="empty-state">
+                <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14,2 14,8 20,8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10,9 9,9 8,9"/>
+                </svg>
+                <div class="empty-title">No notes in ${currentFile}</div>
+                <div class="empty-desc">Start typing to add your first note</div>
+            </div>
+        `;
         return;
     }
 
     chatContainer.innerHTML = messages.map(note => `
-                <div class="message" data-note-id="${note.id}">
-                    <div class="message-content" 
-                         contenteditable="true" 
-                         data-note-id="${note.id}"
-                         spellcheck="false">${escapeHtml(note.text)}</div>
-                    <div class="message-footer">
-                        <span class="message-time">${note.timestamp}</span>
-                        <div class="message-actions">
-                            ${renderMoveButtons(note.id)}
-                            <button class="action-btn delete-btn" data-note-id="${note.id}">
-                                🗑️
-                                <span class="btn-label">Delete</span>
-                            </button>
-                        </div>
-                    </div>
+        <div class="message" data-note-id="${note.id}">
+            <div class="message-content" 
+                 contenteditable="true" 
+                 data-note-id="${note.id}"
+                 spellcheck="false">${escapeHtml(note.text)}</div>
+            <div class="message-footer">
+                <span class="message-time">${note.timestamp}</span>
+                <div class="message-actions">
+                    ${renderMoveButtons(note.id)}
+                    <button class="action-btn delete-btn" data-note-id="${note.id}">
+                        🗑️
+                        <span class="btn-label">Delete</span>
+                    </button>
                 </div>
-            `).reverse().join('');
+            </div>
+        </div>
+    `).reverse().join('');
 
     attachEventListeners();
 }
@@ -116,11 +206,11 @@ function renderMoveButtons(noteId) {
     return targetFiles.map(fileName => {
         const config = buttonConfigs[fileName];
         return `
-                    <button class="action-btn move-btn" data-note-id="${noteId}" data-target-file="${fileName}">
-                        ${config.emoji}
-                        <span class="btn-label">${config.label}</span>
-                    </button>
-                `;
+            <button class="action-btn move-btn" data-note-id="${noteId}" data-target-file="${fileName}">
+                ${config.emoji}
+                <span class="btn-label">${config.label}</span>
+            </button>
+        `;
     }).join('');
 }
 
@@ -198,16 +288,6 @@ function deleteNote(noteId) {
     // updateSidebar();
 }
 
-function loadData() {
-    // Load data from localStorage or external source
-    // Implementation depends on your storage preference
-}
-
-function saveData() {
-    // Save data to localStorage or external source
-    // Implementation depends on your storage preference
-}
-
 function scrollToBottom() {
     setTimeout(function() {
         chatContainer.scrollTop = 0;
@@ -231,9 +311,6 @@ function escapeHtml(text) {
 //         detail: { files: files, currentFile: currentFile }
 //     }));
 // }
-
-// Initialize when page loads
-document.addEventListener('DOMContentLoaded', init);
 
 const chatInput = document.getElementById('chat-input');
 function autoResize() {
