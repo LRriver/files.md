@@ -382,24 +382,24 @@ func (b *Bot) saveFromTextMsg(u Update) error {
 		return b.addToRepliedFile(replyMsgID, msg)
 	}
 
-	if b.cfg.TasksOnlyMode() {
-		sanitizedTitle, content, err := b.extractTitleAndContent(msg)
-		if err != nil {
-			return fmt.Errorf("save: %w", err)
-		}
-
-		filename := fs.Filename(sanitizedTitle)
-		err = b.createOrAdd(fs.DirToday, filename, content)
-		if err != nil {
-			return fmt.Errorf("save: %w", err)
-		}
-
-		msgID, _ := u.MsgID()
-		b.db.SetRecentDirByMsgID(msgID, fs.DirToday)
-		b.db.SetRecentFilenameByMsgID(msgID, filename)
-
-		return b.showMoveTo([]string{fs.Hash(filename)})
-	}
+	//if b.cfg.TasksOnlyMode() {
+	//	sanitizedTitle, content, err := b.extractTitleAndContent(msg)
+	//	if err != nil {
+	//		return fmt.Errorf("save: %w", err)
+	//	}
+	//
+	//	filename := fs.Filename(sanitizedTitle)
+	//	err = b.createOrAdd(fs.DirToday, filename, content)
+	//	if err != nil {
+	//		return fmt.Errorf("save: %w", err)
+	//	}
+	//
+	//	msgID, _ := u.MsgID()
+	//	b.db.SetRecentDirByMsgID(msgID, fs.DirToday)
+	//	b.db.SetRecentFilenameByMsgID(msgID, filename)
+	//
+	//	return b.showMoveTo([]string{fs.Hash(filename)})
+	//}
 
 	// TODO handle forwards
 	//if updateHasTime {
