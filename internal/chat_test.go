@@ -174,7 +174,7 @@ func TestSaveToChatWithImage(t *testing.T) {
 
 	content, err := userFS.Read(fs.DirRoot, fs.ChatFilename)
 	r.NoError(err)
-	r.Equal("#### 27 June, Thursday\n![](image.jpg)\n`01:01` Image description\n", content)
+	r.Equal("#### 27 June, Thursday\n`01:01` ![](image.jpg) Image description\n", content)
 }
 
 func TestSaveToChatEmptyFile(t *testing.T) {

@@ -2089,18 +2089,26 @@ func TestShowForADayRecurring(t *testing.T) {
 func TestSchedule(t *testing.T) {
 	r := require.New(t)
 
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeFull
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
+
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 	err = userFS.CreateDirsIfNotExist()
-	r.NoError(err)
-	err = userFS.Write("today", "Task.md", "")
 	r.NoError(err)
 
 	tgram := tg.NewFakeTG()
 
 	cfg := fakeConfig()
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), cfg)
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("sc", []string{"8a42", "345600", "0 0 * * 1-5"})))
+
+	err = bot.Reply(tg.NewUpd(-1, "Task"))
+	r.NoError(err)
+
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("sc", []string{"0", "345600", "0 0 * * 1-5"})))
 	r.NoError(err)
 
 	tasksForToday, err := userFS.FilesAndDirs("today")
@@ -2123,18 +2131,26 @@ func TestSchedule(t *testing.T) {
 func TestScheduleNoRepeat(t *testing.T) {
 	r := require.New(t)
 
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeFull
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
+
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 	err = userFS.CreateDirsIfNotExist()
-	r.NoError(err)
-	err = userFS.Write("today", "Task.md", "")
 	r.NoError(err)
 
 	tgram := tg.NewFakeTG()
 
 	cfg := fakeConfig()
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), cfg)
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("sc", []string{"8a42", "345600", ""})))
+
+	err = bot.Reply(tg.NewUpd(-1, "Task"))
+	r.NoError(err)
+
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("sc", []string{"0", "345600", ""})))
 	r.NoError(err)
 
 	tasksForToday, err := userFS.FilesAndDirs("today")
@@ -2473,19 +2489,19 @@ func TestSaveToNewTask(t *testing.T) {
 
 	kb := tg.NewKeyboard([]tg.Row{
 		tg.NewRow(
-			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{"d0776a3e2b9"})),
-			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{"d0776a3e2b9"})),
-			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{"d0776a3e2b9"})),
+			tg.NewBtn("🌚 To tmrw", tg.NewCmd("sc_tmrw", []string{"0"})),
+			tg.NewBtn("⏳ To later", tg.NewCmd("mv_later", []string{"0"})),
+			tg.NewBtn("📆 To a day", tg.NewCmd("sc_day", []string{"0"})),
 		),
 		tg.NewRow(
-			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{"d0776a3e2b9"})),
-			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{"d0776a3e2b9"})),
-			tg.NewBtn("➡️ To Today", tg.NewCmd("today", nil)),
+			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{"0"})),
+			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{"0"})),
+			tg.NewBtn("➡️ To Today", tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})),
 		),
 	})
 	r.Equal(kb, tgram.LastSentKeyboard)
 
-	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("today", nil)))
+	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv", []string{"c5e7dfaf771", "0"})))
 	r.NoError(err)
 
 	content, err := userFS.Read("today", "New task.md")
@@ -2495,7 +2511,7 @@ func TestSaveToNewTask(t *testing.T) {
 	r.Nil(database.InputExpectation())
 	msgID, ok := database.LastKeyboardMsgID()
 	r.True(ok)
-	r.Equal(1, msgID)
+	r.Equal(2, msgID)
 	r.Equal(msgID, tgram.LastSentMessageID)
 }
 
@@ -2551,7 +2567,7 @@ func TestSaveToExistingFile(t *testing.T) {
 		tg.NewRow(
 			tg.NewBtn("📄 To File", tg.NewCmd("to_file", []string{"1"})),
 			tg.NewBtn("💚 To Journal", tg.NewCmd("mv_to_journal", []string{"1"})),
-			tg.NewBtn("➡️ To Today", tg.NewCmd("today", nil)),
+			tg.NewBtn("➡️ To Today", tg.NewCmd("mv", []string{"c5e7dfaf771", "1"})),
 		),
 	})
 	r.Equal(kb, tgram.LastSentKeyboard)
@@ -3864,13 +3880,18 @@ func TestMoveToExistingNote_Success(t *testing.T) {
 		return time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
 	}
 
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeFull
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
+
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
 
 	err = userFS.CreateDirsIfNotExist()
 	r.NoError(err)
-	err = userFS.Write("today", "Task.md", "Task content")
-	r.NoError(err)
+
 	err = userFS.MakeDir("notes")
 	r.NoError(err)
 	err = userFS.Write("notes", "ExistingNote.md", "Existing content\n")
@@ -3880,11 +3901,12 @@ func TestMoveToExistingNote_Success(t *testing.T) {
 	cfg := fakeConfig()
 	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), cfg)
 
+	err = bot.Reply(tg.NewUpd(-1, "Task content"))
+	r.NoError(err)
+
 	toDirHash := fs.Hash("notes")
 	toFilenameHash := fs.Hash("ExistingNote.md")
-	fromFilenameHash := fs.Hash("Task.md")
-
-	err = bot.moveToExistingNote([]string{toFilenameHash, toDirHash, fromFilenameHash})
+	err = bot.moveToExistingNote([]string{toFilenameHash, toDirHash, "0"})
 	r.NoError(err)
 
 	content, err := userFS.Read("notes", "ExistingNote.md")
@@ -3916,8 +3938,14 @@ func TestMoveToExistingNote_FileNotFound(t *testing.T) {
 	r.Error(err)
 }
 
-func TestMoveToExistingNote_InvalidHash(t *testing.T) {
+func TestMoveToExistingNote_InvalidIndex(t *testing.T) {
 	r := require.New(t)
+
+	mode := userconfig.DefaultConfig.Mode
+	userconfig.DefaultConfig.Mode = userconfig.ModeFull
+	defer func() {
+		userconfig.DefaultConfig.Mode = mode
+	}()
 
 	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
 	r.NoError(err)
@@ -3928,11 +3956,11 @@ func TestMoveToExistingNote_InvalidHash(t *testing.T) {
 
 	toDirHash := "invalidHash"
 	toFilenameHash := "invalidHash"
-	fromFilenameHash := "invalidHash"
+	msgIndex := "-1"
 
-	err = bot.moveToExistingNote([]string{toFilenameHash, toDirHash, fromFilenameHash})
+	err = bot.moveToExistingNote([]string{toFilenameHash, toDirHash, msgIndex})
 	r.Error(err)
-	r.Contains(err.Error(), "move to exsiting note")
+	r.Contains(err.Error(), "move to existing note")
 }
 
 func FuzzSaveFromTextMsg(f *testing.F) {

@@ -1763,6 +1763,9 @@ func (b *Bot) moveToExistingNote(params []string) error {
 
 		return nil
 	}, msgIndex)
+	if err != nil {
+		return fmt.Errorf("move to existing note: can't read content from chat: %w", err)
+	}
 
 	return b.ShowToday(nil)
 }
