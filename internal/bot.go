@@ -597,39 +597,48 @@ func (b *Bot) answerFileRequest(msg string) error {
 	c := b.db.InputExpectation()
 	if c != nil {
 		b.db.DelInputExpectation()
-		newFilenameHash := c.Params[0]
-		newFilename, err := b.fs.Unhash(fs.DirRoot, newFilenameHash)
+		msgIndex, err := strconv.Atoi(c.Params[0])
 		if err != nil {
-			return fmt.Errorf("inline query: can't unhash filename %s: %w", newFilenameHash, err)
+			return fmt.Errorf("inline query: can't parse msg index %s: %w", c.Params[0], err)
 		}
 
-		// User selects same file, no need to do anything
-		if dir == fs.DirRoot && filename == newFilename {
-			return b.ShowToday(nil)
-		}
+		err = b.moveFromChat(func(content string, timestamp time.Time) error {
+			// TODO fix recent commands
+			if dir == fs.DirRoot {
+				// We have a file
+				b.db.SetRecentCommand(consts.CmdMoveToExistingFile)
+				b.db.SetRecentCommandParams([]string{fs.ShortHash(filename), fs.ShortHash(fs.DirToday)})
+			} else {
+				// We have a note (a file placed in a subdirectory)
+				b.db.SetRecentCommand(consts.CmdMoveToExistingNote)
+				b.db.SetRecentCommandParams([]string{fs.ShortHash(filename), fs.ShortHash(dir)})
+			}
 
-		content, err := b.restoreMsg(fs.DirRoot, newFilename)
+			err = b.addToFile(dir, filename, content)
+			if err != nil {
+				return fmt.Errorf("inline query: can't add to file %s: %w", filename, err)
+			}
+
+			return nil
+		}, msgIndex)
 		if err != nil {
-			return fmt.Errorf("inline query: can't read file %s: %w", newFilename, err)
+			return fmt.Errorf("inline query: can't move from chat: %w", err)
 		}
 
-		if dir == fs.DirRoot {
-			// We have a file
-			b.db.SetRecentCommand(consts.CmdMoveToExistingFile)
-			b.db.SetRecentCommandParams([]string{fs.ShortHash(filename), fs.ShortHash(fs.DirToday)})
-		} else {
-			// We have a note (a file placed in a subdirectory)
-			b.db.SetRecentCommand(consts.CmdMoveToExistingNote)
-			b.db.SetRecentCommandParams([]string{fs.ShortHash(filename), fs.ShortHash(dir)})
-		}
+		//newFilename, err := b.fs.Unhash(fs.DirRoot, newFilenameHash)
+		//if err != nil {
+		//	return fmt.Errorf("inline query: can't unhash filename %s: %w", newFilenameHash, err)
+		//}
+		//
+		//// User selects same file, no need to do anything
+		//if dir == fs.DirRoot && filename == newFilename {
+		//	return b.ShowToday(nil)
+		//}
 
-		err = b.addToFile(dir, filename, content)
-		if err != nil {
-			return fmt.Errorf("inline query: can't add to file %s: %w", filename, err)
-		}
-
-		// No worries if we can't delete - we'll have a redundant file
-		_ = b.fs.Del(fs.DirRoot, newFilename)
+		//content, err := b.restoreMsg(fs.DirRoot, newFilename)
+		//if err != nil {
+		//	return fmt.Errorf("inline query: can't read file %s: %w", newFilename, err)
+		//}
 
 		// Just an informative message
 		_, _ = b.tg.Send(b.userID, fmt.Sprintf(i18n.Tr("Saved to <b>%s</b>"), fs.Title(filename)), nil, tg.MarkupHTML)
