@@ -282,14 +282,19 @@ function attachEventListeners() {
             if (!isBlockSelecting) {
                 isBlockSelecting = true;
                 document.getSelection().removeAllRanges();
+                chatContainer.classList.add('block-selecting');
             }
             selectRange(startMessage, currentMessage);
         }
     });
 
     document.addEventListener('mouseup', function() {
-        isBlockSelecting = false;
-        startMessage = null;
+        if (isBlockSelecting) {
+            // Keep the selection when block selecting ends
+            isBlockSelecting = false;
+            startMessage = null;
+            chatContainer.classList.remove('block-selecting');
+        }
     });
 
     // Add event listeners for editing message content
@@ -357,20 +362,26 @@ function attachEventListeners() {
 
     // Message selection
     chatContainer.querySelectorAll('.message').forEach(message => {
-        message.addEventListener('click', function(e) {
-            // Don't select if clicking on action buttons or editing content
-            if (e.target.closest('.message-actions') || e.target.classList.contains('editing')) {
-                return;
-            }
+        chatContainer.querySelectorAll('.message').forEach(message => {
+            message.addEventListener('click', function(e) {
+                // Don't select if clicking on action buttons or editing content
+                if (e.target.closest('.message-actions') || e.target.classList.contains('editing')) {
+                    return;
+                }
 
-            if (e.ctrlKey || e.metaKey) {
-                // Toggle selection with Ctrl/Cmd
-                this.classList.toggle('selected');
-            } else {
-                // Clear other selections and select this one
-                document.querySelectorAll('.message.selected').forEach(m => m.classList.remove('selected'));
-                this.classList.add('selected');
-            }
+                // Don't handle click if we just finished block selecting
+                if (isBlockSelecting) {
+                    return;
+                }
+
+                if (isMetaKey(e)) {
+                    this.classList.toggle('selected');
+                } else {
+                    // Clear other selections and select this one
+                    document.querySelectorAll('.message.selected').forEach(m => m.classList.remove('selected'));
+                    this.classList.add('selected');
+                }
+            });
         });
     });
 
