@@ -45,7 +45,7 @@
         stroke: var(--color-tx) !important;
     }
 
-    #close-chat:hover {
+    #close-chat:hover, #fullscreen-chat:hover {
         color: var(--color-tx) !important;
     }
 }

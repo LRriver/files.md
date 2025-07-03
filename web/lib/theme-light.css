@@ -41,12 +41,16 @@
         background: var(--color-bg-active);
     }
 
-    #close-chat {
+    #close-chat, #fullscreen-chat {
         color: var(--color-tx-alt) !important;
     }
 
     #open-chat:hover svg {
        stroke: var(--color-link) !important;
+    }
+
+    #close-chat:hover, #fullscreen-chat:hover {
+        color: var(--color-link) !important;
     }
 
     #close-chat:hover {
