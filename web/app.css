@@ -129,13 +129,13 @@ body {
     transform: translateX(0);
 }
 
-body:has(#sidebar[style*="display: none"]):has(#editor2-container:not([style*="display: none"])) #content {
-    flex-direction: row;
-}
+/*body:has(#sidebar[style*="display: none"]):has(#editor2-container:not([style*="display: none"])) #content {*/
+/*    flex-direction: row;*/
+/*}*/
 
-body:has(#sidebar[style*="display: none"]):has(#editor2-container:not([style*="display: none"])) #editor-container {
-    flex: 0 0 50%;
-}
+/*body:has(#sidebar[style*="display: none"]):has(#editor2-container:not([style*="display: none"])) #editor-container {*/
+/*    flex: 0 0 50%;*/
+/*}*/
 
 /*#content:has(#editor2-container:not([style*="display: none"])) #editor2-container {*/
 /*    flex: 0 0 50%;*/
