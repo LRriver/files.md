@@ -1036,7 +1036,7 @@ async function syncCurrentFile(syncWithServer = true) {
                 addFileToMemory(dir, newFilename, {
                     content: content, // TODO do we have to store it in memory?
                     lastModified: 0,
-                    handle: await getFileHandle(toPath(dir, filename), true),
+                    handle: await getFileHandle(toPath(dir, newFilename), true),
                 });
                 // Get fresher content after await.
                 if (isCurrentEditorSame()) {
@@ -1051,7 +1051,7 @@ async function syncCurrentFile(syncWithServer = true) {
                 // Why adding to server files? What if we add a few consecutive renames?
                 setServerFile(path, content, 0);
                 saveServerFiles();
-                console.log('Created', `${dir}/${filename}`);
+                console.log('Created', `${dir}/${newFilename}`);
 
                 // Let's call it a day?
                 await renderSidebar();
