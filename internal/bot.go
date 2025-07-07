@@ -1547,14 +1547,8 @@ func (b *Bot) showStart(params []string) error {
 		}
 	}
 
-	kb := tg.NewKeyboard([]tg.Row{
-		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("brain"), b.tr("Everything")), tg.NewCmd(consts.CmdFullMode, nil))),
-		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("notes"), b.tr("Notes")), tg.NewCmd(consts.CmdNotesOnlyMode, nil))),
-		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("tasks"), b.tr("Tasks")), tg.NewCmd(consts.CmdTasksOnlyMode, nil))),
-		tg.NewRow(tg.NewBtn(txt.Emoji(i18n.Emoji("journal"), b.tr("Journal")), tg.NewCmd(consts.CmdJournalOnlyMode, nil))),
-	})
-
-	return b.showHTML("Welcome 👋! What do you need?", kb)
+	// Default to full mode, people don't like to choose.
+	return b.fullMode(nil)
 }
 
 func (b *Bot) moveToDirFromToday(params []string) error {

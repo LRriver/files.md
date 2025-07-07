@@ -135,7 +135,7 @@
 
     // Allow offline mode.
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('serviceworker.js?v=')
+        navigator.serviceWorker.register('offline.js?v=')
             .then(reg => console.log('Service Worker registered'))
             .catch(err => console.log('Serrvice Worker registration failed'));
     }
