@@ -335,15 +335,15 @@ a:hover {
 }
 
 .CodeMirror .HyperMD-list-line-1 {
-    padding-left: 35px !important;
+    padding-left: 25px !important;
 }
 
 .CodeMirror .HyperMD-list-line-2 {
-    padding-left: 65px !important;
+    padding-left: 55px !important;
 }
 
 .CodeMirror .HyperMD-list-line-3 {
-    padding-left: 95px !important;
+    padding-left: 85px !important;
 }
 
 
