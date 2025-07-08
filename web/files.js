@@ -59,7 +59,7 @@ async function loadLocalFiles(rootDirHandle) {
     let newFiles = {};
 
     // Loads files recursively
-    async function loadDir(dirHandle, path = '', depth = 1) {
+    async function loadDir(dirHandle, path = '', depth = 3) {
         const entries = [];
         for await (const entry of dirHandle.values()) {
             entries.push(entry);

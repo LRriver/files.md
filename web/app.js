@@ -239,6 +239,23 @@ function initEditor(el) {
         }
     })
 
+    // Auto-select title when clicking on first line
+    newEditor.getWrapperElement().addEventListener('mousedown', function(e) {
+        // Get the position where the mouse was clicked
+        const coords = newEditor.coordsChar({left: e.clientX, top: e.clientY});
+
+        if (coords.line === 0) {
+            // Small delay to let CodeMirror handle the click first
+            setTimeout(() => {
+                const lineLength = newEditor.getLine(0).length;
+                newEditor.setSelection(
+                    {line: 0, ch: 2},  // Start from character 2 (skip "# ")
+                    {line: 0, ch: lineLength}
+                );
+            }, 0);
+        }
+    });
+
     // Force '# ' to remain at first line.
     newEditor.on('change', function (cm, change) {
         if (change.from.line === 0) {
