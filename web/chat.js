@@ -248,6 +248,7 @@ async function send() {
 }
 
 async function receive(val) {
+    console.log('Receiving:', val);
     let isChatModal = document.getElementById('chat-container').classList.contains('modal');
     if (!isChatModal && editor.currentFile !== CHAT_FILENAME) {
         return;
