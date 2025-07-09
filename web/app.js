@@ -738,8 +738,9 @@ async function showRandomFile() {
 }
 
 async function newFile() {
-    let dir = editor.currentDir || '';
+    let dir = toDir(currentEditor.path);
     let selectedDirs = tree.getSelectedNodes();
+    // TODO multidir
     if (selectedDirs.length > 0 &&
         selectedDirs[0].getOptions &&
         typeof selectedDirs[0].getOptions === 'function' &&
@@ -750,20 +751,24 @@ async function newFile() {
     let filename = 'New file.md';
 
     let num = 1;
-    while (files[dir] && files[dir][filename]) {
-        filename = `New file (${num}).md`;
-        num++;
-    }
+    // TODO multidir
+    // while (files[dir] && files[dir][filename]) {
+    //     filename = `New file (${num}).md`;
+    //     num++;
+    // }
 
-    let handle = await getFileHandle(toPath(dir, filename), true);
-    addMemFile(dir, filename, {
+    const path = toPath(dir, filename);
+    let handle = await getFileHandle(path, true);
+    // TODO multidir all mem files should add path key? Search
+    addMemFile(path, {
         content: '',
         lastModified: 0,
         handle: handle,
+        path: path,
         imageUrl: null
     });
 
-    await openFile(dir, filename);
+    await openFile(path);
     editor.setCursor({line: 1, ch: 0});
     editor.focus();
 
@@ -866,26 +871,28 @@ window.addEventListener('keydown', async (event) => {
         event.preventDefault();
         event.stopPropagation();
 
-        let dir = currentEditor.currentDir;
-        let filename = currentEditor.currentFile;
-        if (filename === CHAT_PATH) {
+
+        const path = currentEditor.path;
+        if (path === CHAT_PATH) {
             return;
         }
 
-        const nextFile = findNextFile(dir, filename);
+        const nextFilePath = findNextFile(path);
 
-        let oldPath = toPath(dir, filename);
-        let newPath = toPath('archive', filename);
+        let oldPath = path;
+        let newPath = '/archive/' + toFilename(path);
 
-        if (dir === 'archive') {
+        if (toDir(path) === '/archive') {
+            console.log('Removing file permanently', path);
             await removeFile(oldPath);
         } else {
+            console.log('Moving file to archive', path);
             await moveFile(oldPath, newPath);
         }
 
         await renderSidebar();
-        if (nextFile) {
-            await openFile(nextFile.dir, nextFile.filename);
+        if (nextFilePath) {
+            await openFile(nextFilePath);
         } else {
             showRandomFile();
         }
@@ -1257,6 +1264,7 @@ function getCurrentVersion() {
     return window.COMMIT_HASH ? window.COMMIT_HASH.replace('?v=', '') : '';
 }
 
+// TODO multidir
 function findNextFile(currentDir, currentFilename) {
     const allFiles = [];
 
