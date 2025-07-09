@@ -134,12 +134,12 @@
     window.COMMIT_HASH = '?v=';
 
     // Allow offline mode.
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('offline.js?v=')
-            .then(reg => console.log('Service Worker registered'))
-            .catch(err => console.log('Serrvice Worker registration failed'));
-    }
-
+    // if ('serviceWorker' in navigator) {
+    //     navigator.serviceWorker.register('offline.js?v=')
+    //         .then(reg => console.log('Service Worker registered'))
+    //         .catch(err => console.log('Serrvice Worker registration failed'));
+    // }
+    // Uncomment once we migrate to new files scheme
 
     window.currentEditor = null; // Expose to global scope
     editor = initEditor(document.getElementById("editor-textarea"));

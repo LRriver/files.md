@@ -18,8 +18,6 @@ async function openChat() {
         history.pushState(state, '');
     }
 
-    editor.currentDir = "";
-    editor.currentFile = CHAT_PATH;
     editor.path = CHAT_PATH;
 
     const codemirror = document.querySelector('.CodeMirror-wrap');

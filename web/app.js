@@ -202,7 +202,9 @@ function initEditor(el) {
             return;
         }
 
+        console.log('READ LINK', path);
         let parts = path.split('/');
+        // TODO multidir
         if (parts.length === 1) {
             path += '.md';
             // Does file exist in root dir?

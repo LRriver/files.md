@@ -1545,6 +1545,10 @@ function findSiblingPath(path) {
             return;
         }
 
+        if (filePath.startsWith('/media')) {
+            return;
+        }
+
         if (!isFile) {
             return;
         }
