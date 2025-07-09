@@ -332,25 +332,16 @@ test('rename should not create multiply files', async ({ page }) => {
     });
     expect(codeMirrorContent).toBe("# New file\ncontent\n");
 
-    const debug = await page.evaluate(() => {
-        return {
-            filesExists: typeof window.files !== 'undefined',
-            filesValue: window.files,
-            emptyKeyExists: window.files && ('' in window.files),
-            emptyKeyValue: window.files && window.files[''],
-            allKeys: window.files && Object.keys(window.files)
-        };
-    });
     const clientFiles = await page.evaluate(() => {
-        return Object.keys(files['']);
+        return Object.keys(files);
     })
 
     expect(clientFiles).toBeDefined();
-    expect(clientFiles.length).toBe(5);
+    expect(clientFiles.length).toBe(4);
     expect(clientFiles).toContain('New file.md');
 });
 
-test('create dirs and move', async ({ page }) => {
+test('create new file, move to new dir, create new file is subdir, move to root', async ({ page }) => {
     await page.evaluate(() => {
         window.getRootDirHandle = async function() {
             const root = await navigator.storage.getDirectory();
@@ -370,6 +361,7 @@ test('create dirs and move', async ({ page }) => {
     await page.click('#new-file');
     await page.waitForTimeout(100);
     await page.keyboard.press('ArrowUp');
+    await page.waitForTimeout(100);
     await page.keyboard.press('Meta+a');
     await page.keyboard.type('file1');
     // await page.waitForTimeout(500); // TODO shoudln't be rc, maybe save file on focus out or something
@@ -379,19 +371,19 @@ test('create dirs and move', async ({ page }) => {
 
     await page.click('#new-folder');
     await page.waitForTimeout(100);
-    // await page.keyboard.type('dir1');
-    // await page.waitForTimeout(100);
-    // await page.keyboard.press('Enter');
-
 
     await page.keyboard.press('Meta+m');
     await page.waitForTimeout(100);
     await page.click('#move-results >> text=dir1');
     await page.waitForTimeout(200);
+    // Before multidir we didn't wait for file sync
+    // await page.waitForTimeout(2000);
 
+    // Create second file in same subdir
     await page.click('#new-file');
-    await page.waitForTimeout(100);
+    await page.waitForTimeout(300);
     await page.keyboard.press('ArrowUp');
+    await page.waitForTimeout(200);
     await page.keyboard.press('Meta+a');
     await page.keyboard.type('file2');
     await page.waitForTimeout(100);
@@ -405,10 +397,10 @@ test('create dirs and move', async ({ page }) => {
     await page.waitForTimeout(500);
 
 
-    // await page.click('#sidebar-tree li:has-text("dir1")');
+    await page.click('#sidebar-tree li:has-text("dir1")');
     await page.click('#sidebar-tree li:has-text("dir1") ul li:has-text("File1")')
-
     await page.click('#sidebar-tree li:has-text("File2")');
+    await page.pause();
 
 });
 

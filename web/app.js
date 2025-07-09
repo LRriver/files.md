@@ -752,16 +752,17 @@ async function newFile() {
     // TODO don't create on disk?
     let filename = 'New file.md';
 
+    // TODO check tests
     let num = 1;
-    // TODO multidir
-    // while (files[dir] && files[dir][filename]) {
-    //     filename = `New file (${num}).md`;
-    //     num++;
-    // }
+    while (files[dir + '/'] && files[dir + '/'][filename]) {
+        filename = `New file (${num}).md`;
+        num++;
+    }
 
     const path = toPath(dir, filename);
+    console.log('Creating new file', path);
     let handle = await getFileHandle(path, true);
-    // TODO multidir all mem files should add path key + isFile? Search
+    // TODO multidir all mem files should add path key ? Search
     addMemFile(path, {
         isFile: true,
         content: '',
@@ -792,14 +793,14 @@ async function newFolder() {
 
     let finalFolderName = folderName;
     let num = 1;
-    while (files[finalFolderName]) {
+    while (files[finalFolderName + '/']) {
         finalFolderName = `${folderName} (${num})`;
         num++;
     }
 
     const rootDirHandle = await getRootDirHandle();
     await rootDirHandle.getDirectoryHandle(finalFolderName, {create: true});
-    files[finalFolderName] = {};
+    files[finalFolderName + '/'] = {};
 
     console.log('CREATED folder', finalFolderName);
 

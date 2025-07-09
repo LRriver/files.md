@@ -840,14 +840,15 @@ async function moveCurrentFile(toDir) {
         let content = getCurrentContent();
         await saveTextFile(newPath, content);
         // TODO move to saveTextFile?
-        removeMemFile(path);
+        removeMemFile(oldPath);
         // delete files[editor.currentDir][editor.currentFile];
         console.log('MOVING to DIR:', toDir);
 
-        addMemFile(path, {
+        addMemFile(newPath, {
             isFile: true,
             content: content,
             lastModified: 0,
+            path: newPath,
             handle: await getFileHandle(newPath),
         });
         // files[toDir][editor.currentFile] = {
@@ -855,7 +856,7 @@ async function moveCurrentFile(toDir) {
         //     lastModified: 0,
         //     handle: await getFileHandle(newPath),
         // }
-        editor.path = newPath;
+        currentEditor.path = newPath;
         addServerFile(newPath, content, 0);
         saveServerFiles();
 

@@ -470,10 +470,10 @@ class MoveModal {
     getMoveDestinations() {
         let dirs = ['/'];
         for (const dir of Object.keys(files)) {
-            if (dir === '' || dir === 'media') {
+            if (dir === 'media/') {
                 continue;
             }
-            dirs.push(dir);
+            dirs.push(dir.replace(/\/$/, ''));
         }
 
         // Place _read_ etc in the end
