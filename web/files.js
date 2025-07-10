@@ -78,6 +78,7 @@ async function loadLocalFiles(rootDirHandle) {
                 }
                 currentDir = currentDir[dir]; // Move reference deeper
             }
+
             if (entry.kind === 'directory') {
                 if (filename.startsWith('.') || depth >= 5) continue;
 
@@ -85,8 +86,6 @@ async function loadLocalFiles(rootDirHandle) {
                 const dir = `${path}${filename}/`;
                 dirPromises.push({handle: entry, path: dir, depth: depth + 1});
             } else if (entry.kind === 'file' && (isSupportedExtension || isConfig)) {
-
-
                 // Reuse existing file handle if it exists
                 let existingDir = files;
                 for (let dir of dirs) {
@@ -1144,7 +1143,6 @@ async function syncCurrentFile(syncWithServer = true) {
     let isCurrentEditorSame = () => {
         return path === window.currentEditor.path;
     }
-    console.log('really syncing', path);
 
     // Track in-editor renaming.
     if (path !== CHAT_PATH) {

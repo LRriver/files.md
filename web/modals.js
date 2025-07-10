@@ -133,6 +133,7 @@ class SearchModal {
         // }
 
         // If search is equal to directory
+        // TODO multidir
         if (files[search]) {
             for (const filename in files[search]) {
                 results.push({
@@ -164,31 +165,39 @@ class SearchModal {
         }
 
         // Substring matching
-        for (const dir in files) {
-            // If dir is not in search dirs, skip
-            if (dir === 'media') {
-                continue;
+        // for (const dir in files) {
+        //     // If dir is not in search dirs, skip
+        //     if (dir === 'media') {
+        //         continue;
+        //     }
+        //
+        //
+        //     for (const filename in files[dir]) {
+        walk(files, (path, isFile) => {
+            if (!isFile) {
+                return;
             }
 
-
-            for (const filename in files[dir]) {
-                const potentialMatch = filename.replace(/\.md$/, '');
-                const isSubstringMatch = potentialMatch.toLowerCase().includes(search.toLowerCase());
-
-                if (!isSubstringMatch) {
-                    continue; // Skip this filename if it doesn't match
-                }
-
-                let matchedPercent = (search.length / potentialMatch.length) * 100;
-
-                if (lowPriorityDirs.includes(dir)) {
-                    matchedPercent /= 5;
-                }
-                results.push({
-                    filename: filename, dir: dir, score: Math.round(matchedPercent)
-                });
+            const dirName = trimPostfix(toDirPath(path), '/');
+            if (dirName === 'media') {
+                return;
             }
-        }
+
+            const filename = toFilename(path);
+            const potentialMatch = trimPostfix(filename, '.md');
+            const isSubstringMatch = potentialMatch.toLowerCase().includes(search.toLowerCase());
+            if (!isSubstringMatch) {
+                return;
+            }
+
+            let matchedPercent = (search.length / potentialMatch.length) * 100;
+            if (lowPriorityDirs.includes(dirName)) {
+                matchedPercent /= 5;
+            }
+            results.push({
+                filename: filename, path: path, score: Math.round(matchedPercent)
+            });
+        });
 
         const uniqueResultsMap = new Map();
         for (let i = 0; i < results.length; i++) {
@@ -201,6 +210,7 @@ class SearchModal {
         }
         results = Array.from(uniqueResultsMap.values()).sort((a, b) => b.score - a.score);
         searchModal.showResults(results);
+        console.log(results);
     }
 
     open(text = '', messageIndex = null, buttonElement  = null) {
@@ -291,10 +301,10 @@ class SearchModal {
             } else {
                 listItem.textContent = `${dirName}${title}`;
             }
-            listItem.setAttribute('data-path', `${dirName}/${filename}`);
+            listItem.setAttribute('data-path', path);
             listItem.setAttribute('data-index', index);
 
-            listItem.onclick = () => this.handleClick(dirName, filename);
+            listItem.onclick = () => this.handleClick(path);
 
             listItem.onmouseenter = () => {
                 document.querySelectorAll('#search-results li').forEach(li => li.classList.remove('focused'));
@@ -308,7 +318,8 @@ class SearchModal {
         this.updateFocusedItem();
     }
 
-    handleClick(dir, filename) {
+    handleClick(path) {
+
         if (this.messageIndex !== null) {
             const selectedMessages = document.querySelectorAll('.message.selected');
             let indices = [];
@@ -361,13 +372,29 @@ class SearchModal {
 
     showRecentFiles() {
         let results = [];
-        for (const dir of Object.keys(excludeDirs(SYSTEM_DIRS))) {
-            for (const filename of Object.keys(files[dir])) {
-                results.push({
-                    dir, filename, lastModified: files[dir][filename].lastModified,
-                });
+        walk(files, (path, isFile) => {
+            if (!isFile) {
+                return;
             }
-        }
+
+            const dirName = trimPostfix(toDirPath(path), '/');
+            // if in system_dirs
+            if (SYSTEM_DIRS.includes(dirName)) {
+                return;
+            }
+
+            results.push({
+                path: path,
+                lastModified: getMemFile(path).lastModified,
+            })
+        });
+        // for (const dir of Object.keys(excludeDirs(SYSTEM_DIRS))) {
+        //     for (const filename of Object.keys(files[dir])) {
+        //         results.push({
+        //             dir, filename, lastModified: files[dir][filename].lastModified,
+        //         });
+        //     }
+        // }
 
         results = results
             .sort((a, b) => b.lastModified - a.lastModified)
