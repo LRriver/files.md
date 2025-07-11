@@ -339,7 +339,7 @@ test('files exist on both client and server, serverFiles contains proper server 
     await expectFileOnServer(page, 'config.json', '{}');
 
     let filesOnServer = await page.evaluate(() => {
-        return serverFiles['files'];
+        return server['files'];
     });
     expect(filesOnServer).toEqual({
         'Chat.txt': {

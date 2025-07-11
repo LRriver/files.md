@@ -38,8 +38,8 @@ let isLoadingLocalFiles = false;
 // }
 // TODO multidir rename to memFiles
 let files = {}; // In-memory representation of files
-let serverFiles = {files: {}, media: {}, timestamps: {}, mediaTimestamp: 0};
-const SERVER_STORAGE_KEY = 'files';
+let server = {files: {}, media: {}, timestamps: {}, mediaTimestamp: 0};
+const SERVER_STORAGE_KEY = 'server'; // If scheme is migrated, I believe it's better to introduce a new key, because for now old keys aren't removed.
 const SUPPORTED_EXTENSIONS = ['md', 'txt', 'png', 'jpg', 'jpeg', 'webp', 'gif',];
 const SYSTEM_DIRS = ['media', 'archive', '_read_', '_watch_', '_shop_', 'today', 'later', 'journal', 'habits', 'triggers', 'places', 'insights'];
 const CONFIG_PATH = '/config.json';
@@ -143,7 +143,7 @@ async function loadLocalFiles(rootDirHandle) {
     // Load server files
     const savedServerFiles = localStorage.getItem(SERVER_STORAGE_KEY);
     if (savedServerFiles) {
-        serverFiles = JSON.parse(savedServerFiles);
+        server = JSON.parse(savedServerFiles);
     }
 
     isLoadingLocalFiles = false;
@@ -175,19 +175,19 @@ async function syncTextsWithServer() {
     let modified = [];
     let deleted = [];
     // TODO is it possible that the server has zero files? I think at least '.' is sent
-    let hasFullySyncedFilesAtLeastOnce = serverFiles['timestamps'] !== undefined && Object.keys(serverFiles['timestamps']).length > 0;;
+    let hasFullySyncedFilesAtLeastOnce = server['timestamps'] !== undefined && Object.keys(server['timestamps']).length > 0;;
     if (hasFullySyncedFilesAtLeastOnce) {
-        console.log('SYNCED AT LEAST ONCE, collecting local files', serverFiles['timestamps']);
+        console.log('SYNCED AT LEAST ONCE, collecting local files', server['timestamps']);
         ({modified, deleted} = await collectModifiedAndDeletedFiles());
     } else {
         console.log('NEVER SYNCED BEFORE');
     }
-    const server = await post('syncTexts', {
+    const response = await post('syncTexts', {
         modified: modified,
         deleted: deleted,
-        timestamps: serverFiles['timestamps'] || [],
+        timestamps: server['timestamps'] || [],
     });
-    if (server === null) {
+    if (response === null) {
         isSyncing = false;
         return;
     }
@@ -200,7 +200,7 @@ async function syncTextsWithServer() {
     try {
         // Write files received from the server
         let failedAtLeastOnce = false;
-        for (const fileInfo of server.files) {
+        for (const fileInfo of response.files) {
             let {path, content, lastModified} = fileInfo;
             // We get relative paths from server, and in our app we use absolute paths
             const relPath = path;
@@ -227,10 +227,10 @@ async function syncTextsWithServer() {
                 console.log('SYNC texts: write file: ', path);
                 addServerFile(path, content, lastModified);
                 // Unfortunately rename is not working, so we have to delete the old file
-                const shouldRemoveOldFile = relPath in server.renames;
+                const shouldRemoveOldFile = relPath in response.renames;
                 // TODO write e2e for renames
                 if (shouldRemoveOldFile) {
-                    const oldPath = joinPath('/', server.renames[relPath]);
+                    const oldPath = joinPath('/', resposne.renames[relPath]);
                     try {
                         console.log('REMOVING due to renaming', oldPath);
                         await removeFile(oldPath);
@@ -255,7 +255,7 @@ async function syncTextsWithServer() {
         // would report them as new.
         if (!failedAtLeastOnce) {
             console.log('BATCH sync ok, moving timestamps');
-            serverFiles['timestamps'] = server.timestamps;
+            server['timestamps'] = response.timestamps;
             saveServerFiles();
         } else {
             console.log("BATCH sync error, timestamps aren't moved");
@@ -345,7 +345,7 @@ async function syncMedia() {
 
     const startTime = performance.now();
 
-    const mediaTimestamp = serverFiles['mediaTimestamp'] || 0;
+    const mediaTimestamp = server['mediaTimestamp'] || 0;
     if (mediaTimestamp !== 0) {
         // Send new files from client to server
         let newMedias = await collectNewMediaFiles();
@@ -378,7 +378,7 @@ async function syncMedia() {
                 if (!response.ok) {
                     console.error(`Failed to sync media file ${mediaFilename}:`, response.statusText, response, await response.text());
                 } else {
-                    serverFiles['media'][mediaFilename] = {
+                    server['media'][mediaFilename] = {
                         lastModified: 0, // We don't track binary files modifications.
                     };
                     saveServerFiles();
@@ -459,10 +459,10 @@ async function saveMediaFile(path, blob, lastModified) {
         const file = await fileHandle.getFile();
         const fileExists = file.size > 0;
         if (fileExists) {
-            if (serverFiles['mediaTimestamp'] === undefined || lastModified > serverFiles['mediaTimestamp']) {
-                serverFiles['mediaTimestamp'] = lastModified;
+            if (server['mediaTimestamp'] === undefined || lastModified > server['mediaTimestamp']) {
+                server['mediaTimestamp'] = lastModified;
             }
-            serverFiles['media'][file.name] = {
+            server['media'][file.name] = {
                 lastModified: lastModified,
             }
             saveServerFiles();
@@ -481,10 +481,10 @@ async function saveMediaFile(path, blob, lastModified) {
         await writable.write(blob);
         await writable.close();
         console.log(`Successfully wrote media file: ${path}`);
-        if (lastModified > serverFiles['mediaTimestamp']) {
-            serverFiles['mediaTimestamp'] = lastModified;
+        if (lastModified > server['mediaTimestamp']) {
+            server['mediaTimestamp'] = lastModified;
         }
-        serverFiles['media'][filename] = {
+        server['media'][filename] = {
             lastModified: lastModified,
         }
         saveServerFiles();
@@ -581,7 +581,7 @@ async function collectModifiedAndDeletedFiles() {
     //         }
     //     }
     // }
-    walk(serverFiles.files, (path, isFile) => {
+    walk(server.files, (path, isFile) => {
         if (!isFile) {
             return;
         }
@@ -617,7 +617,7 @@ async function collectNewMediaFiles() {
 
     const newMediaFiles = [];
     for (const filename in files['media/']) {
-        if (serverFiles['media'] === undefined || !(filename in serverFiles['media'])) {
+        if (server['media'] === undefined || !(filename in server['media'])) {
             newMediaFiles.push(filename);
         }
     }
@@ -936,7 +936,7 @@ function getServerFile(path) {
     dirs = dirs.filter(d => d !== '');
     const filename = dirs.pop();
 
-    let currentDir = serverFiles['files'];
+    let currentDir = server['files'];
     for (let dir of dirs) {
         dir += '/';
         if (!currentDir[dir]) {
@@ -965,7 +965,7 @@ function addServerFile(path, content, lastModifiedAt, clientLastSynced = null) {
     dirs = dirs.filter(d => d !== '');
     const filename = dirs.pop();
 
-    let currentDir = serverFiles['files'];
+    let currentDir = server['files'];
     for (let dir of dirs) {
         dir += '/';
         if (!currentDir[dir]) {
@@ -996,7 +996,7 @@ function removeServerFile(path) {
     dirs = dirs.filter(d => d !== '');
     const filename = dirs.pop();
 
-    let currentDir = serverFiles['files'];
+    let currentDir = server['files'];
     for (let dir of dirs) {
         dir += '/';
         if (!currentDir[dir]) {
@@ -1011,7 +1011,7 @@ function removeServerFile(path) {
 }
 
 function saveServerFiles() {
-    localStorage.setItem(SERVER_STORAGE_KEY, JSON.stringify(serverFiles));
+    localStorage.setItem(SERVER_STORAGE_KEY, JSON.stringify(server));
 }
 
 // TODO save old file
