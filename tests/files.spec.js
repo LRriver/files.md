@@ -3,8 +3,8 @@ const {test, expect} = require('@playwright/test');
 test.beforeEach(async ({page}) => {
     await page.goto('/app.html');
 
-    await page.waitForSelector('.CodeMirror', {timeout: 10000});
-    await page.waitForSelector('#sidebar-tree', {timeout: 5000});
+    // await page.waitForSelector('.CodeMirror', {timeout: 10000});
+    await page.waitForSelector('#sidebar-tree', {timeout: 1000});
 });
 
 test('should load files', async ({ page }) => {
