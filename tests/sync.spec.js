@@ -367,7 +367,7 @@ test('files exist on both client and server, serverFiles contains proper server 
             hash: expect.any(Number),
             isFile: true,
             lastModified: expect.any(Number),
-            lastClientModified: expect.anything() || expect.toBeNull(),
+            lastClientModified: expect.any(Object) || null,
             path: '/another.md'
         },
         'config.json': {

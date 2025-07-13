@@ -110,8 +110,10 @@ test('should handle text selection correctly', async ({page}) => {
 test('should handle text selection for word-wrap content', async ({page}) => {
     // Add some test content with various markdown elements
     await page.click('#sidebar >> text=Welcome');
-    await page.keyboard.press('Control+a');
+    await page.waitForSelector('.CodeMirror');
+    await page.keyboard.press('Meta+a');
     await page.keyboard.press('Delete');
+    await page.waitForTimeout(200);
 
     const testContent = `Lorem ipsum dolor\nLorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.`;
 
