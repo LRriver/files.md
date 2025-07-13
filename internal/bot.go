@@ -1496,7 +1496,7 @@ func (b *Bot) showChecklist(params []string) error {
 		return fmt.Errorf("show checklist: %w", err)
 	}
 	items = fs.SortByCtimeDesc(items)
-	slices.Reverse(items)
+	//slices.Reverse(items)
 
 	// TODO check that we're showing last buttons
 	maxButtons := maxBtns
