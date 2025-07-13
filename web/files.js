@@ -1109,7 +1109,10 @@ async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
     // TODO disable when syncing?
     currentEditor.path = path;
     if (saveToHistory) {
-        const state = {path: path};
+        const state = {
+            path: path,
+            el: el,
+        };
         history.pushState(state, '');
     }
 
