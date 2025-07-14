@@ -207,37 +207,25 @@ function initEditor(el) {
             return;
         }
 
-        console.log('READ LINK', path);
-        // let parts = path.split('/');
-        // if (parts.length === 1) {
-        //     path += '.md';
-        //     // Does file exist in root dir?
-        //     if (files[''] && files[''][path]) {
-        //         openFile('', path, true, 'editor2-textarea');
-        //         return;
-        //     }
-        //
-        //     // Does file exist in current dir?
-        //     if (files[editor.currentDir] && files[editor.currentDir][path]) {
-        //         openFile(editor.currentDir, path, true, 'editor2-textarea');
-        //         return;
-        //     }
-        //
-        //     // Loop through all 1st level dirs to find
-        //     for (const dir in files) {
-        //         if (files[dir][path]) {
-        //             openFile(dir, path, true, 'editor2-textarea');
-        //             return;
-        //         }
-        //     }
-        //
-        //     return;
-        // }
-        //
-        // await openFile(parts[0], parts[1] + '.md', true, 'editor2-textarea');
-        // TODO add obsidian like "search file through all dirs"
-        console.log(path);
-        openFile(path + '.md', true, 'editor2-textarea')
+        path += '.md';
+
+        if (getMemFile(path) !== null) {
+            console.log('OPEN', getMemFile(path), path);
+            openFile(path, true, 'editor2-textarea')
+        }
+
+        // Try to find filename is any folder
+        let filename = toFilename(path);
+        walk(files, (path, isFile) => {
+            if (!isFile) {
+                return;
+            }
+
+            if (toFilename(path) === filename) {
+                openFile(path, true, 'editor2-textarea');
+                return false;
+            }
+        });
     };
 
     newEditor.on('inputRead', async function (cm, change) {

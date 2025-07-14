@@ -1454,6 +1454,7 @@ async function post(endpoint, data) {
 
 // If there are files without isFile flag - we would have recursion.
 // Because walk would try to iterate over js object keys.
+// Return false from callback to stop walking.
 function walk(obj, callback, path = '/') {
     // Chromium's callstack limit is 11K, so we iterate.
     const stack = [{obj, path}];
@@ -1475,7 +1476,9 @@ function walk(obj, callback, path = '/') {
         }
 
         if (currentObj.isFile) {
-            callback(currentPath, true);
+            if (callback(currentPath, true) === false) {
+                return;
+            }
             continue;
         }
 
@@ -1499,7 +1502,9 @@ function walk(obj, callback, path = '/') {
         // Process files first
         for (const key of files) {
             const fullPath = currentPath + key;
-            callback(fullPath, true);
+            if (callback(fullPath, true) === false) {
+                return;
+            }
         }
 
         // Add directories to stack (in reverse order to maintain order)
@@ -1508,7 +1513,9 @@ function walk(obj, callback, path = '/') {
             const item = currentObj[key];
             const fullPath = currentPath + key;
 
-            callback(fullPath, false);
+            if (callback(fullPath, false) === false) {
+                return;
+            }
             stack.push({obj: item, path: fullPath});
         }
     }
