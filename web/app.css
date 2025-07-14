@@ -685,11 +685,10 @@ body.dragging * {
 
 .nav-button {
     position: absolute;
-    top: 5px;
+    top: 10px;
     background: none;
     border: none;
-    width: 33px;
-    height: 33px;
+    padding: 0;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -703,9 +702,9 @@ body.dragging * {
 }
 
 #go-forward {
-    right: 26px;
+    right: 34px;
 }
 
 #go-backward {
-    right: 48px;
+    right: 58px;
 }
