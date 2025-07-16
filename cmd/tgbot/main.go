@@ -103,7 +103,7 @@ func main() {
 				}
 			}()
 
-			updJSON, _ := json.MarshalIndent(update, "", "  ")
+			updJSON, _ := json.Marshal(update)
 			infolog.Info("Bot update", "update", string(updJSON))
 
 			var userID int64
@@ -140,17 +140,16 @@ func supervisor(userID int64, updates <-chan tgbotapi.Update, telegram *tg.TG) {
 					slog.Error("Bot panic", "userID", userID, "err", err, "stacktrace", string(debug.Stack()))
 				}
 			}()
-			processUserUpdates(updates, telegram)
+			processUserUpdates(userID, updates, telegram)
 		}()
 		time.Sleep(time.Second)
 		slog.Info("Restarting worker", "userID", userID)
 	}
 }
 
-func processUserUpdates(updates <-chan tgbotapi.Update, telegram *tg.TG) {
+func processUserUpdates(userID int64, updates <-chan tgbotapi.Update, telegram *tg.TG) {
 	for update := range updates {
 		upd := tg.NewTGUpd(update)
-		userID := upd.UserID()
 
 		storagePath := config.BotCfg.StorageDir
 		storagePath, err := filepath.Abs(storagePath)
