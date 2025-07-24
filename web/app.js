@@ -289,6 +289,31 @@ function initEditor(el) {
 
     // Editor keybindings
     newEditor.addKeyMap({
+        'Enter': function (cm) { // If header is selected, enter should move cursor to next line
+            const cursor = cm.getCursor();
+            // If there's a selection on the header line, just move cursor
+            if (cursor.line === 0) {
+                if (cm.somethingSelected()) {
+                    const selections = cm.listSelections();
+                    const isHeaderSelection = selections.some(sel =>
+                        sel.anchor.line === 0 || sel.head.line === 0
+                    );
+
+                    if (isHeaderSelection) {
+                        // Clear selection and move cursor to start of line 1
+                        cm.setCursor({line: 1, ch: 0});
+                        return;
+                    }
+                } else {
+                    // No selection, just move cursor to next line
+                    cm.setCursor({line: 1, ch: 0});
+                    return;
+                }
+            }
+
+            // For all other lines, use default Enter behavior
+            return CodeMirror.Pass;
+        },
         'Cmd-A': function (cm) {
             const cursor = cm.getCursor();
 
