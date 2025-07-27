@@ -47,6 +47,7 @@ func AddChecklistItem(md, item string, checked bool) string {
 	// Markdown checklist items can't have new lines
 	item = strings.ReplaceAll(NormNewLines(item), "\n", " ")
 
+	md, _ = RemoveChecklistItem(md, item)
 	if checked {
 		md += "\n- [x] " + item
 	} else {
@@ -60,6 +61,10 @@ func CompleteChecklistItem(md, itemHash string) (string, string) {
 	foundItem := ""
 	lines := strings.Split(md, "\n")
 	for i, line := range lines {
+		if len(line) < 6 {
+			continue
+		}
+
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "- [ ] ") && Hash(line[6:]) == itemHash {
 			foundItem = line[6:]
@@ -70,17 +75,25 @@ func CompleteChecklistItem(md, itemHash string) (string, string) {
 	return strings.Join(lines, "\n"), foundItem
 }
 
-func RemoveChecklistItem(md, item string) string {
+// RemoveChecklistItem removes given item from checklist.
+// Returns newMarkdown, removedItem
+func RemoveChecklistItem(md, itemOrHash string) (string, string) {
+	removedItem := ""
 	lines := strings.Split(md, "\n")
 	var newLines []string
 	for _, line := range lines {
+		if len(line) < 6 {
+			continue
+		}
+
 		line = strings.TrimSpace(line)
-		if line == "- [ ] "+item || line == "- [x] "+item {
+		if Hash(line[6:]) == itemOrHash || line[6:] == itemOrHash {
+			removedItem = line[6:]
 			continue
 		}
 		newLines = append(newLines, line)
 	}
-	return strings.Join(newLines, "\n")
+	return strings.Join(newLines, "\n"), removedItem
 }
 
 // MarkdownToHTML naively converts user's markdown to Telegram-supported subset of HTML.

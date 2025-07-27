@@ -1245,15 +1245,13 @@ func (b *Bot) showChecklists(_ []string) error {
 }
 
 func (b *Bot) showPostpone(_ []string) error {
-	files, err := b.fs.FilesAndDirs(fs.DirToday)
-	if err != nil {
-		return fmt.Errorf("show postpone: can't get files in '%s' dir: %w", fs.DirToday, err)
-	}
+	todayMD, err := b.fs.Read(fs.DirRoot, fs.DirToday)
+	tasks := txt.ChecklistItems(todayMD)
 
 	var kb tg.Keyboard
-	for _, file := range files {
-		cmd := tg.NewCmd(consts.CmdPostpone, []string{fs.Hash(file.Name)})
-		kb.AddRow(tg.NewBtn(file.Title, cmd))
+	for task := range tasks {
+		cmd := tg.NewCmd(consts.CmdPostpone, []string{fs.Hash(task)})
+		kb.AddRow(tg.NewBtn(task, cmd))
 	}
 
 	kb.AddRow(tg.NewRow(
@@ -1297,18 +1295,27 @@ func (b *Bot) showMoveFromToday(_ []string) error {
 // TODO today.txt
 func (b *Bot) postpone(params []string) error {
 	// TODO Remove input expectations if dir is not today (?)
-	filenameHash := params[0]
+	taskHash := params[0]
 
-	filename, err := b.fs.Unhash(fs.DirToday, filenameHash)
+	todayMD, err := b.fs.Read(fs.DirRoot, fs.TodayFilename)
 	if err != nil {
-		return fmt.Errorf("postpone: can't unhash old filename %s in %s: %w", fs.DirToday, filenameHash, err)
+		return fmt.Errorf("postpone: can't read today file: %w", err)
 	}
 
-	// TODO touch
-	// TODO multiline
-	err = b.fs.Rename(fs.DirToday, filename, fs.DirLater, filename)
+	todayMD, task := txt.RemoveChecklistItem(todayMD, taskHash)
+
+	laterMD, err := b.fs.Read(fs.DirRoot, fs.LaterFilename)
 	if err != nil {
-		return fmt.Errorf("postpone: can't move: %w", err)
+		return fmt.Errorf("postpone: can't read later file: %w", err)
+	}
+	err = b.fs.Write(fs.DirRoot, fs.LaterFilename, txt.AddChecklistItem(laterMD, task, false))
+	if err != nil {
+		return fmt.Errorf("postpone: can't write later file: %w", err)
+	}
+
+	err = b.fs.Write(fs.DirRoot, fs.TodayFilename, todayMD)
+	if err != nil {
+		return fmt.Errorf("postpone: can't write today file: %w", err)
 	}
 
 	return b.showPostpone(nil)
@@ -1811,6 +1818,16 @@ func (b *Bot) completeChecklistItem(params []string) error {
 		return fmt.Errorf("complete checklist item: can't add to archive: %w", err)
 	}
 
+	if item == fs.PomodoroTask {
+		err = b.cfg.AddToSchedule(item, time.Now().Unix()+int64(b.cfg.PomodoroDuration().Seconds()), "")
+		if err != nil {
+			return fmt.Errorf("complete checklist item: can't add to schedule: %w", err)
+		}
+	} else {
+		// We can tolerate failure of writing to journal, since that's not single source of truth
+		_ = journal.AddRecord(b.fs, fmt.Sprintf("✅ %s", fs.Title(item)), b.cfg.Timezone())
+	}
+
 	return b.ShowToday(nil)
 }
 
@@ -2192,16 +2209,6 @@ func (b *Bot) complete(params []string) error {
 	err = b.fs.Rename(dir, filename, fs.DirArchive, filename)
 	if err != nil {
 		return fmt.Errorf("complete: can't complete %s: %w", filename, err)
-	}
-
-	if dir == fs.DirToday && filename == fs.PomodoroTask {
-		err = b.cfg.AddToSchedule(filename, time.Now().Unix()+int64(b.cfg.PomodoroDuration().Seconds()), "")
-		if err != nil {
-			return fmt.Errorf("complete: can't add to schedule: %w", err)
-		}
-	} else {
-		// We can tolerate failure of writing to journal, since that's not single source of truth
-		_ = journal.AddRecord(b.fs, fmt.Sprintf("✅ %s", fs.Title(filename)), b.cfg.Timezone())
 	}
 
 	if dir == fs.DirLater {

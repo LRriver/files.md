@@ -1014,7 +1014,8 @@ func TestBotTodayLabelIcons(t *testing.T) {
 	r.Contains(label, "🍅")
 
 	// Pomodoro and another task in today
-	todayMD, _ := b.fs.Read("", "Today.txt")
+	todayMD, err := b.fs.Read("", "Today.txt")
+	r.NoError(err)
 	r.Nil(b.fs.Write("", "Today.txt", txt.AddChecklistItem(todayMD, "Task", false)))
 	label = b.todayLabel()
 	r.NotContains(label, "🌴")

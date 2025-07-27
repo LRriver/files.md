@@ -118,7 +118,7 @@ func moveTaskToToday(item string, userFS *fs.FS) (bool, error) {
 		return false, fmt.Errorf("moveTaskToToday: can't read done file: %w", err)
 	}
 
-	reducedDoneMD := txt.RemoveChecklistItem(doneMD, item)
+	reducedDoneMD, _ := txt.RemoveChecklistItem(doneMD, item)
 	itemWasRemoved := doneMD != reducedDoneMD
 	if itemWasRemoved {
 		todayMD, err := userFS.Read(fs.DirToday, fs.TodayFilename)
@@ -152,7 +152,7 @@ func moveTaskToToday(item string, userFS *fs.FS) (bool, error) {
 		return false, fmt.Errorf("moveTaskToToday: can't read later file: %w", err)
 	}
 
-	reducedLaterMD := txt.RemoveChecklistItem(laterMD, item)
+	reducedLaterMD, _ := txt.RemoveChecklistItem(laterMD, item)
 	itemWasRemoved = laterMD != reducedLaterMD
 	if itemWasRemoved {
 		todayMD, err := userFS.Read(fs.DirToday, fs.TodayFilename)
