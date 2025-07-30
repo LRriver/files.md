@@ -251,6 +251,7 @@ func (b *Bot) handlers() map[string]func([]string) error {
 		consts.CmdShowRenameFile:              b.showRenameFile,
 		consts.CmdShowMultilineTask:           b.showMultilineTask,
 		consts.CmdShowLongItem:                b.showLongItem,
+		consts.CmdShowLongItemFromInbox:       b.showLongItemFromInbox,
 		consts.CmdShowFile:                    b.showFile,
 		consts.CmdShowChecklist:               b.showChecklist,
 		consts.CmdCompleteListItem:            b.completeListItem,
@@ -404,7 +405,7 @@ func (b *Bot) saveFromTextMsg(u Update) error {
 		return b.addToRepliedFile(replyMsgID, msg)
 	}
 
-	msgIndex, err := b.saveToChat(msg, b.cfg.Timezone())
+	msgIndex, err := b.saveToInbox(msg, b.cfg.Timezone())
 	if err != nil {
 		return fmt.Errorf("save to chat: %w", err)
 	}
@@ -452,7 +453,7 @@ func (b *Bot) saveFromImage(u Update) error {
 		return b.addToRepliedFile(replyMsgID, content)
 	}
 
-	msgIndex, err := b.saveToChat(content, b.cfg.Timezone())
+	msgIndex, err := b.saveToInbox(content, b.cfg.Timezone())
 	if err != nil {
 		return fmt.Errorf("save from image: %w", err)
 	}
@@ -610,7 +611,7 @@ func (b *Bot) answerFileRequest(msg string) error {
 			return fmt.Errorf("inline query: can't parse msg index %s: %w", c.Params[0], err)
 		}
 
-		err = b.moveFromChat(func(content string, timestamp time.Time) error {
+		err = b.moveFromInbox(func(content string, timestamp time.Time) error {
 			if dir == fs.DirRoot {
 				// We have a file
 				b.db.SetRecentCommand(consts.CmdMoveToExistingFile)
@@ -886,7 +887,7 @@ func (b *Bot) showMoveToFromToday(params []string) error {
 		return fmt.Errorf("move to from today: can't restore msg %s: %w", filename, err)
 	}
 
-	msgIndex, err := b.saveToChat(content, b.cfg.Timezone())
+	msgIndex, err := b.saveToInbox(content, b.cfg.Timezone())
 	if err != nil {
 		return fmt.Errorf("move to from today: can't save to chat: %w", err)
 	}
@@ -1012,9 +1013,15 @@ func (b *Bot) ShowToday(_ []string) error {
 			block = strings.TrimSpace(block[8:])
 		}
 
-		cmd := tg.NewCmd(consts.CmdCompleteFromChat, []string{strconv.Itoa(msgIndex)})
-		btn := tg.NewBtn(txt.Emoji(i18n.Emoji("chat"), block), cmd)
-		kb.AddRow(btn)
+		if len(block) >= maxTitleLengthForMobile {
+			cmd := tg.NewCmd(consts.CmdShowLongItemFromInbox, []string{strconv.Itoa(msgIndex)})
+			btn := tg.NewBtn(txt.Emoji(i18n.Emoji("eyes"), block), cmd)
+			kb.AddRow(btn)
+		} else {
+			cmd := tg.NewCmd(consts.CmdCompleteFromChat, []string{strconv.Itoa(msgIndex)})
+			btn := tg.NewBtn(txt.Emoji(i18n.Emoji("chat"), block), cmd)
+			kb.AddRow(btn)
+		}
 
 		msgIndex++
 	}
@@ -1519,6 +1526,49 @@ func (b *Bot) showLongItem(params []string) error {
 	return nil
 }
 
+// TODO today.txt move to today/later
+func (b *Bot) showLongItemFromInbox(params []string) error {
+	msgIndexStr := params[0]
+	msgIndex, err := strconv.Atoi(msgIndexStr)
+	if err != nil {
+		return fmt.Errorf("show long item: can't parse msgIndex from params: %w", err)
+	}
+
+	inboxMD, err := b.fs.Read(fs.DirRoot, fs.InboxFilename)
+	if err != nil {
+		return fmt.Errorf("show long item: can't read inbox file: %w", err)
+	}
+
+	blocks := readBlocks(inboxMD)
+	index := 0
+	for _, block := range blocks {
+		if !strings.HasPrefix(block, "`") {
+			continue
+		}
+		if msgIndex == index {
+			// TODO make it not as dirty
+			if len(block) > 8 {
+				block = strings.TrimSpace(block[8:])
+
+				kb := tg.NewKeyboard([]tg.Row{
+					tg.NewRow(
+						tg.NewBtn(i18n.StrBack, tg.NewCmd(consts.CmdShowToday, []string{})),
+						tg.NewBtn(i18n.StrComplete, tg.NewCmd(consts.CmdCompleteFromChat, []string{msgIndexStr})),
+					),
+				})
+
+				err = b.showMD(block, kb)
+				if err != nil {
+					return fmt.Errorf("show long item from inbox: %w", err)
+				}
+			}
+		}
+		index++
+	}
+
+	return nil
+}
+
 func (b *Bot) showFile(params []string) error {
 	dirHash := params[0]
 	filenameHash := params[1]
@@ -1716,7 +1766,7 @@ func (b *Bot) moveToDir(params []string) error {
 		}
 	}
 
-	err = b.moveFromChat(func(content string, timestamp time.Time) error {
+	err = b.moveFromInbox(func(content string, timestamp time.Time) error {
 		var sanitizedTitle string
 		if toDir == fs.DirToday || toDir == fs.DirLater {
 			sanitizedTitle, content, err = b.extractTitleAndContent(content, maxTitleLengthForMobile)
@@ -1819,7 +1869,7 @@ func (b *Bot) addToChecklist(checklistHash string, msgIndex int) (string, error)
 	}
 
 	var item string
-	err = b.moveFromChat(func(content string, timestamp time.Time) error {
+	err = b.moveFromInbox(func(content string, timestamp time.Time) error {
 		item = content
 		md := txt.AddChecklistItem(checklistMD, content, false)
 		return b.fs.Write(fs.DirRoot, checklist, md)
@@ -1924,7 +1974,7 @@ func (b *Bot) moveToExistingFile(params []string) error {
 		return fmt.Errorf("move to file: can't unhash existing file '%s': %w", existingFilenameHash, err)
 	}
 
-	err = b.moveFromChat(func(content string, timestamp time.Time) error {
+	err = b.moveFromInbox(func(content string, timestamp time.Time) error {
 		return b.addToFile(fs.DirRoot, existingFilename, content)
 	}, true, msgIndices...)
 	if err != nil {
@@ -1972,7 +2022,7 @@ func (b *Bot) moveToExistingNote(params []string) error {
 		return fmt.Errorf("move to existing note:: %w", err)
 	}
 
-	err = b.moveFromChat(func(content string, t time.Time) error {
+	err = b.moveFromInbox(func(content string, t time.Time) error {
 		err = b.addToFile(toDir, toFilename, content)
 		if err != nil {
 			return fmt.Errorf("move to existing note: can't add to file %s: %w", toFilename, err)
@@ -2018,7 +2068,7 @@ func (b *Bot) moveToDirChecklist(params []string) error {
 		}
 	}
 
-	err = b.moveFromChat(func(content string, t time.Time) error {
+	err = b.moveFromInbox(func(content string, t time.Time) error {
 		isMultiline := txt.IsMultiline(content)
 
 		if isMultiline && b.cfg.ShouldSplitChecklist(checklistDir) {
@@ -2084,7 +2134,7 @@ func (b *Bot) moveToNewFile(params []string) error {
 	//if err != nil {
 	//	return fmt.Errorf("move to new file: can't read file '%s': %w", filename, err)
 	//}
-	err = b.moveFromChat(func(content string, t time.Time) error {
+	err = b.moveFromInbox(func(content string, t time.Time) error {
 		content = strings.TrimSpace(content)
 		//if len(content) == 0 {
 		//	content = fs.Title(filename)
@@ -2149,7 +2199,7 @@ func (b *Bot) moveToJournal(params []string) error {
 		msgIndicies = append(msgIndicies, index)
 	}
 
-	err := b.moveFromChat(func(content string, t time.Time) error {
+	err := b.moveFromInbox(func(content string, t time.Time) error {
 		// TODO take into account time from chat
 		return journal.AddRecord(b.fs, content, b.cfg.Timezone())
 	}, false, msgIndicies...)
@@ -2263,7 +2313,7 @@ func (b *Bot) completeFromChat(params []string) error {
 		return fmt.Errorf("complete: can't parse msgIndex from params: %w", err)
 	}
 
-	err = b.moveFromChat(func(content string, timestamp time.Time) error {
+	err = b.moveFromInbox(func(content string, timestamp time.Time) error {
 		sanitizedTitle, _, err := b.extractTitleAndContent(content, maxTitleLength)
 		if err != nil {
 			return fmt.Errorf("complete: %w", err)

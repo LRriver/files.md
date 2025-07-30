@@ -18,7 +18,7 @@ var (
 	userLocks map[string]*sync.Mutex
 )
 
-func (b *Bot) saveToChat(content string, timezone *time.Location) (int, error) {
+func (b *Bot) saveToInbox(content string, timezone *time.Location) (int, error) {
 	exists, err := b.fs.Exists(fs.DirRoot, fs.InboxFilename)
 	if err != nil {
 		return 0, fmt.Errorf("saveToChat: %w", err)
@@ -77,11 +77,11 @@ func (b *Bot) saveToChat(content string, timezone *time.Location) (int, error) {
 	return recordCount, nil
 }
 
-// moveFromChat passes messages at given indices to a specified callback function.
+// moveFromInbox passes messages at given indices to a specified callback function.
 // On callback success, it removes those messages from the chat file.
 // msgIndices are 0-based and refer to the messages only blocks (not headers).
 // On collapse=false callback would be called on every message.
-func (b *Bot) moveFromChat(
+func (b *Bot) moveFromInbox(
 	callback func(content string, timestamp time.Time) error,
 	collapse bool,
 	msgIndices ...int,

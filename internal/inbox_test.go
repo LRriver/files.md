@@ -95,7 +95,7 @@ func TestSaveToChatNewFile(t *testing.T) {
 
 	bot := NewBot(-1, tg.NewFakeTG(), userFS, db.NewFakeDB(), fakeConfig())
 
-	index, err := bot.saveToChat("Test content", time.UTC)
+	index, err := bot.saveToInbox("Test content", time.UTC)
 	r.NoError(err)
 	r.Equal(0, index)
 
@@ -121,7 +121,7 @@ func TestSaveToChatExistingFile(t *testing.T) {
 
 	bot := NewBot(-1, tg.NewFakeTG(), userFS, db.NewFakeDB(), fakeConfig())
 
-	index, err := bot.saveToChat("New content", time.UTC)
+	index, err := bot.saveToInbox("New content", time.UTC)
 	r.NoError(err)
 	r.Equal(1, index)
 
@@ -147,7 +147,7 @@ func TestSaveToChatNewDay(t *testing.T) {
 
 	bot := NewBot(-1, tg.NewFakeTG(), userFS, db.NewFakeDB(), fakeConfig())
 
-	index, err := bot.saveToChat("Today content", time.UTC)
+	index, err := bot.saveToInbox("Today content", time.UTC)
 	r.NoError(err)
 	r.Equal(1, index)
 
@@ -170,7 +170,7 @@ func TestSaveToChatWithImage(t *testing.T) {
 
 	bot := NewBot(-1, tg.NewFakeTG(), userFS, db.NewFakeDB(), fakeConfig())
 
-	index, err := bot.saveToChat("![](image.jpg) Image description", time.UTC)
+	index, err := bot.saveToInbox("![](image.jpg) Image description", time.UTC)
 	r.NoError(err)
 	r.Equal(0, index)
 
@@ -196,7 +196,7 @@ func TestSaveToChatEmptyFile(t *testing.T) {
 
 	bot := NewBot(-1, tg.NewFakeTG(), userFS, db.NewFakeDB(), fakeConfig())
 
-	index, err := bot.saveToChat("Test content", time.UTC)
+	index, err := bot.saveToInbox("Test content", time.UTC)
 	r.NoError(err)
 	r.Equal(0, index)
 
@@ -557,7 +557,7 @@ func TestMoveFromChatSingleRecord(t *testing.T) {
 		return nil
 	}
 
-	err = bot.moveFromChat(callback, false, 1)
+	err = bot.moveFromInbox(callback, false, 1)
 	r.NoError(err)
 
 	r.Len(callbackCalls, 1)
@@ -611,7 +611,7 @@ and resource allocation`
 		return nil
 	}
 
-	err = bot.moveFromChat(callback, false, 0, 2)
+	err = bot.moveFromInbox(callback, false, 0, 2)
 	r.NoError(err)
 
 	r.Len(callbackCalls, 2)
@@ -667,7 +667,7 @@ func TestMoveFromChatCollapsedSingleRecord(t *testing.T) {
 		return nil
 	}
 
-	err = bot.moveFromChat(callback, true, 1)
+	err = bot.moveFromInbox(callback, true, 1)
 	r.NoError(err)
 
 	r.Len(callbackCalls, 1)
@@ -722,7 +722,7 @@ and resource allocation`
 		return nil
 	}
 
-	err = bot.moveFromChat(callback, true, 0, 2)
+	err = bot.moveFromInbox(callback, true, 0, 2)
 	r.NoError(err)
 
 	r.Len(callbackCalls, 1)

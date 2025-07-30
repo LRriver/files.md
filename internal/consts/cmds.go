@@ -24,6 +24,7 @@ const (
 	CmdPostpone                    = "post"
 	CmdShowMultilineTask           = "task"
 	CmdShowLongItem                = "item"
+	CmdShowLongItemFromInbox       = "item_i"
 	CmdShowFile                    = "file"
 	CmdShowChecklist               = "checklist"
 	CmdShowChecklistItem           = "check_show"
