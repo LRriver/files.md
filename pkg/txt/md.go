@@ -62,17 +62,32 @@ func ChecklistItems(md string) ([]string, map[string]bool) {
 }
 
 func AddChecklistItem(md, item string, checked bool) string {
-	// Markdown checklist items can't have new lines
 	item = strings.ReplaceAll(NormNewLines(item), "\n", " ")
 
 	md, _ = RemoveChecklistItem(md, item)
+	lines := strings.Split(md, "\n")
+
 	if checked {
-		md += "\n- [x] " + item
+		lines = append(lines, "- [x] "+item)
 	} else {
-		md += "\n- [ ] " + item
+		// Find the last incomplete item and insert before it
+		insertIndex := len(lines)
+		for i := len(lines) - 1; i >= 0; i-- {
+			line := strings.TrimSpace(lines[i])
+			if strings.HasPrefix(line, "- [ ] ") {
+				insertIndex = i
+			}
+		}
+
+		// Insert the new incomplete item
+		if insertIndex == len(lines) {
+			lines = append(lines, "- [ ] "+item)
+		} else {
+			lines = append(lines[:insertIndex], append([]string{"- [ ] " + item}, lines[insertIndex:]...)...)
+		}
 	}
 
-	return strings.TrimSpace(md)
+	return strings.TrimSpace(strings.Join(lines, "\n"))
 }
 
 // CompleteChecklistItem marks given item as completed.
