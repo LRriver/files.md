@@ -87,11 +87,11 @@ func newRouter(logger *log.Logger) *http.ServeMux {
 
 	// TODO CHECK that user id belongs to oneTimeToken ID, or get userID by oneTimeToken id
 	// TODO for further safety, remove * cors?
-	r.HandleFunc("/syncTexts", panicMiddleware(corsMiddleware(tokenMiddleware(SyncTexts))))
-	r.HandleFunc("/syncText", panicMiddleware(corsMiddleware(tokenMiddleware(SyncText))))
-	r.HandleFunc("/syncMedias", panicMiddleware(corsMiddleware(tokenMiddleware(SyncMedias))))
-	r.HandleFunc("/syncMedia", panicMiddleware(corsMiddleware(tokenMiddleware(SyncMedia))))
-	r.HandleFunc("/token", panicMiddleware(corsMiddleware(IssueToken)))
+	r.HandleFunc("/syncTexts", corsMiddleware(panicMiddleware(tokenMiddleware(SyncTexts))))
+	r.HandleFunc("/syncText", corsMiddleware(panicMiddleware(tokenMiddleware(SyncText))))
+	r.HandleFunc("/syncMedias", corsMiddleware(panicMiddleware(tokenMiddleware(SyncMedias))))
+	r.HandleFunc("/syncMedia", corsMiddleware(panicMiddleware(tokenMiddleware(SyncMedia))))
+	r.HandleFunc("/token", corsMiddleware(panicMiddleware(corsMiddleware(IssueToken))))
 
 	r.HandleFunc("GET /habits_v2/{userID}", func(w http.ResponseWriter, r *http.Request) {
 		userID, err := strconv.ParseInt(r.PathValue("userID"), 10, 64)
@@ -207,13 +207,13 @@ type FilteredWriter struct {
 }
 
 func (fw *FilteredWriter) Write(p []byte) (n int, err error) {
-	message := string(p)
-	for _, pattern := range fw.ignorePatterns {
-		if strings.Contains(message, pattern) {
-			return len(p), nil
-		}
-	}
-
+	//message := string(p)
+	//for _, pattern := range fw.ignorePatterns {
+	//	if strings.Contains(message, pattern) {
+	//		return len(p), nil
+	//	}
+	//}
+	//
 	return fw.writer.Write(p)
 }
 
