@@ -109,8 +109,9 @@ func SyncTexts(w http.ResponseWriter, r *http.Request) {
 	for _, clientFile := range request.Modified {
 		// Paths that are coming from client start with /, make them relative
 		path := strings.TrimPrefix(clientFile.Path, "/")
+		relativePath := strings.TrimPrefix(path, "/")
 
-		serverModifiedTime, err := userFS.Mtime(fs.DirRoot, path)
+		serverModifiedTime, err := userFS.Mtime(fs.DirRoot, relativePath)
 		var clientContent string
 		if err != nil && !errors.Is(err, os.ErrNotExist) {
 			slog.Error("Sync error: syncTexts: error reading file", "path", path, "error", err)
@@ -121,10 +122,10 @@ func SyncTexts(w http.ResponseWriter, r *http.Request) {
 			logSync(fmt.Sprintf("Sync texts: creating: '%s'", path), r)
 			clientContent = clientFile.Content
 		} else {
-			// file locks?
+			// TODO file locks?
 			fileWasModifiedOnServer := serverModifiedTime > clientFile.LastModified
 			if fileWasModifiedOnServer {
-				serverContent, err := userFS.Read(fs.DirRoot, path)
+				serverContent, err := userFS.Read(fs.DirRoot, relativePath)
 				if err != nil {
 					slog.Error("Sync error: syncTexts: error reading modified on server file '%s': %v", path, err)
 					continue
@@ -132,7 +133,7 @@ func SyncTexts(w http.ResponseWriter, r *http.Request) {
 				logSync(fmt.Sprintf("Sync texts: Merging and writing: '%s'", path), r)
 				clientContent = Merge(serverContent, clientFile.Content)
 			} else {
-				// Changed on client, unchanged on client
+				// Changed on client, unchanged on server
 				logSync(fmt.Sprintf("Sync texts: Writing only: '%s'", path), r)
 				clientContent = clientFile.Content
 			}
@@ -144,12 +145,16 @@ func SyncTexts(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		// Write the clientContent to the server at path
-		err = userFS.Write(fs.DirRoot, path, clientContent)
+		// Write the clientContent to the server at path.
+		err = userFS.Write(fs.DirRoot, relativePath, clientContent)
 		if err != nil {
 			slog.Error("Sync error: syncTexts: error writing file '%s': %v", path, err)
 			logSync(fmt.Sprintf("Sync texts: error writing file '%s': %v", path, err), r)
 			continue
+		}
+
+		if relativePath == fs.TodayFilename || relativePath == fs.InboxFilename {
+			OnTodayUpdate(userID(r))
 		}
 	}
 

@@ -1582,7 +1582,7 @@ func (b *Bot) showLongItemFromInbox(params []string) error {
 					tg.NewRow(
 						tg.NewBtn(i18n.StrBack, tg.NewCmd(consts.CmdShowToday, []string{})),
 						tg.NewBtn(i18n.AddEmoji("Move"), tg.NewCmd(consts.CmdShowMoveTo, []string{msgIndexStr})),
-						tg.NewBtn(i18n.AddEmoji("Archive"), tg.NewCmd(consts.CmdCompleteFromInbox, []string{msgIndexStr})),
+						tg.NewBtn(txt.Emoji(i18n.Emoji("Archive"), "Complete"), tg.NewCmd(consts.CmdCompleteFromInbox, []string{msgIndexStr})),
 					),
 				})
 
