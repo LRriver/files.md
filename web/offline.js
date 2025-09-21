@@ -33,6 +33,7 @@ const urlsToCache = [
     '/lib/similarity.js',
     '/lib/emoji.js',
     '/lib/fs.js',
+    '/lib/txt.js',
     '/welcome.js',
     '/files.js',
     '/app.js',

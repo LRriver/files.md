@@ -45,7 +45,6 @@ async function write(path, content) {
     await writable.close();
 }
 
-
 async function writeAtEnd(path, content) {
     let fileHandle = await getFileHandle(path, true);
     if (fileHandle === null) {

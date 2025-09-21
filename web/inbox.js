@@ -101,6 +101,8 @@ async function toggleInboxModal() {
     }
 }
 
+
+
 async function moveMessagesFromInbox(msgs, moveToCallback) {
     let allMsgs = parseMessages(await read(INBOX_PATH));
     // TODO exclude only first occurence
@@ -110,10 +112,10 @@ async function moveMessagesFromInbox(msgs, moveToCallback) {
     }
 }
 
-function parseMessages(content) {
+function parseMessages(chat) {
     // Normalize line endings
-    content = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-    const lines = content.split('\n');
+    chat = chat.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+    const lines = chat.split('\n');
 
     const headerRegex = /^#### /;
     const timestampRegex = /^`\d{2}:\d{2}` /;
