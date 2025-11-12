@@ -798,11 +798,21 @@ function logError(...args) {
 async function logf(prefix, color, args) {
     // Capture real caller from stack (skip 2 levels: _logInternal and log/error)
     const stack = new Error().stack;
-    const callerFull = stack.split('\n')[3].trim(); // Real caller line
 
+    // Extract 3 and 4 lines from stack trace
+    const callerFull = stack.split('\n')[3].trim(); // Real caller line
     // Extract only the last path segment
     const callerMatch = callerFull.match(/([^\/\\]+:\d+:\d+)/);
-    const caller = callerMatch ? callerMatch[1] : callerFull;
+    let caller = callerMatch ? callerMatch[1] : callerFull;
+
+    // Extract 4 if exists
+    const callerFull2 = stack.split('\n')[4]?.trim();
+    const caller2Match = callerFull2 ? callerFull2.match(/([^\/\\]+:\d+:\d+)/) : null;
+    const caller2 = caller2Match ? caller2Match[1] : null;
+    if (caller2) {
+        // Append second caller for better context
+        caller += ` <- ${caller2}`;
+    }
 
     // Format message
     const msg = args.map(arg =>
