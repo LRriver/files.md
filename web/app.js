@@ -59,7 +59,7 @@ async function init() {
     } else {
         isWelcome = false;
         document.getElementById('open-folder').style.display = 'none';
-        document.getElementById('open-chat-modal').style.display = 'inline';
+        // document.getElementById('open-chat-modal').style.display = 'inline';
     }
 
     // Alert if there's no "Allow on every visit" check.
@@ -397,21 +397,23 @@ async function switchChat() {
 
 // Toggle focus mode
 document.addEventListener('keydown', function (event) {
+    // Cmd+shift+enter toglle inbox modal
     if (event.shiftKey && isMetaKey(event) && event.key === 'Enter') {
         event.preventDefault();
         if (isInbox) {
             history.back();
         } else {
-            openInbox();
+            event.preventDefault();
+            toggleInboxModal();
         }
         return;
     }
-    if (isMetaKey(event) && event.key === '\\') {
+    // Shift+Enter to toggle sidebar
+    if (event.shiftKey && event.key === 'Enter') {
         toggleSidebar();
     }
     if (isMetaKey(event) && event.key === 'Enter') {
-        event.preventDefault();
-        toggleInboxModal();
+        openInbox();
     }
 });
 

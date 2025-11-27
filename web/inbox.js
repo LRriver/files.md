@@ -46,7 +46,7 @@ async function addToInbox() {
 async function openInbox() {
     closeInboxModal();
     chatContainer.style.display = 'flex';
-    chatButton.classList.add('hidden');
+    // chatButton.classList.add('hidden');
 
     if (currentEditor.path !== INBOX_PATH) {
         const state = {path: editor.path};
@@ -73,7 +73,7 @@ async function openInbox() {
 async function openInboxModal() {
     chatContainer.classList.add('modal');
     chatContainer.style.display = 'flex';
-    chatButton.classList.add('hidden');
+    // chatButton.classList.add('hidden');
     inbox.style.display = 'block';
     chatInput.style.display = 'block';
     inbox.style.display = 'flex';
@@ -90,7 +90,7 @@ function closeInboxModal() {
         chatContainer.style.display = 'none';
         inbox.style.display = 'none';
         chatInput.style.display = 'none';
-        chatButton.classList.remove('hidden');
+        // chatButton.classList.remove('hidden');
     }
 }
 

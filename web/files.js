@@ -952,7 +952,7 @@ async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
         chatInput.style.display = 'none';
         isInbox = false;
     }
-    chatButton.classList.remove('hidden');
+    // chatButton.classList.remove('hidden');
     chatContainer.style.display = 'none';
     closeInboxModal();
 
