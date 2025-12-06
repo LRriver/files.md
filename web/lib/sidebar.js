@@ -121,7 +121,7 @@ function renderSidebar(focusDir = '', modifiedPaths) {
         }
     });
 
-    const groupedDirs = new Set(['_read_', '_watch_', '_shop_', 'journal', 'habits', 'insights', 'archive', 'today', 'later']);
+    const groupedDirs = new Set(['_read_', '_watch_', 'journal', 'habits', 'insights', 'archive', 'today', 'later']);
 
     // Step 0: Lists group
     let lastListNode = null;
@@ -873,8 +873,8 @@ function TreeView(root, container, options) {
                     groupHeaderText = "Personal";
                     groupHeaderClass = "personal";
                 } else if (nodeStr === 'inbox') {
-                    groupHeaderText = "Flow";
-                    groupHeaderClass = "flow";
+                    // groupHeaderText = "Personal";
+                    groupHeaderClass = "personal";
                 } else {
                     groupHeaderText = "Files";
                     groupHeaderClass = "user-dirs";
