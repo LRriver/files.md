@@ -47,12 +47,22 @@ All this activity helped me to:
 
 To achieve all that, **you'll have to use your brain**. Not advanced workflows or AI automations.  
 
-## How to take notes
-I reuse long-learned pattern - messaging with a friend.  
+## How to take notes 🗒️
+You read a book, you stumble upon an interesting idea.  
 
-Only now I send notes and ideas to the bot.  
+Open your favorite chat application and send the note there:  
 
-And it saves everything to `.md` files nicely.  
+<img>
+
+We reuse a long-learned pattern – messaging with a friend.
+
+Only now, we send notes and ideas to the bot. And it saves everything to `.md` files nicely.  
+
+No new patterns to learn, no new apps to install.
+
+Telegram bot: <>
+
+Later you can open [app.files.md](https://app.files.md) and make some connections between new and old notes.  
 
 ## Journaling 💚
 
