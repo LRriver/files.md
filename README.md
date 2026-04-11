@@ -47,7 +47,7 @@ All this activity helped me to:
 
 To achieve all that, **you'll have to use your brain**. Not advanced workflows or AI automations.  
 
-## How
+## How to take notes
 I reuse long-learned pattern - messaging with a friend.  
 
 Only now I send notes and ideas to the bot.  

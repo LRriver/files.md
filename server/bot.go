@@ -420,9 +420,8 @@ func (b *Bot) extractCmd(u Update) (*tg.Cmd, error) {
 		// Check if the command is known
 		_, ok := b.handlers()[cmd.Name]
 		if !ok {
-			// An informative message, we can ignore that
 			_, _ = b.tg.Send(b.userID, i18n.Tr("I know nothing about this command 😕"), nil, tg.MarkupHTML)
-			return nil, nil
+			return nil, fmt.Errorf("unknown command: %s", cmd.Name)
 		}
 
 		b.db.DelInputExpectation()
