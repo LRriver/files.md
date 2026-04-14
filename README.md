@@ -56,8 +56,7 @@ I'll quote [I Deleted My Second Brain](https://www.joanwestenberg.com/i-deleted-
 > 
 > **Eventually, I realized I had created a new problem: deferral. The more my system grew, the more I deferred the work of thought to some future self who would sort, tag, distill, and extract the gold.**
 
-You can follow this exciting path:  
-The Second Brain name is exciting. It sounds fancy. You want this.  
+The "Second Brain" is exciting. It sounds fancy. You want this.  
 You invest a lot in structure, guru templates, AI-workflows, plugins.  
 You are very motivated to scrape the wisdom of the whole internet into your second brain.  
 You get dopamine spikes every time **your second brain becomes smarter and bigger**.  
@@ -68,27 +67,29 @@ Moreover, you rob yourself of the chance to live it through.
 
 > **We don’t let new experiences emerge because we already have knowledge.**
 > We think we understand, but in reality we just know.
-> Reading and rereading can easily fool us into believing that we understand a text. Rereading is especially dangerous because of the mere-exposure effect: The moment we become familiar with something, we start believing we also understand it.
-> **At some point, we know something so good, that we start thinking that we actually do it (or at least tried)**.
+> Reading and rereading can easily fool us into believing that we understand a text. The moment we become familiar with something, we start believing we also understand it.  
+> **At some point our knowing is so good, that we start thinking that we actually do it (or at least tried)**.
 
-You can choose another path, see below.
+There's another path.  
 
 ## How to take notes 🗒️
+Leonardo da Vinci, Charles Darwin, Mark Twain, Jules Verne and many others took notes using just pen and paper.  
 
+You don't need to learn new advanced techniques or tools to start taking notes.  
 
-You read a book, you stumble upon an interesting idea.  
+It's even better if you reuse an old pattern.    
 
-Open your favorite chat application and send the note there:  
+For me that was chatting. It is so natural for us to share an insight with our friends through a message.  
+
+Only this time you'll write a message to the bot:
 
 <img>
 
-We reuse a long-learned pattern – messaging with a friend.
-
-Only now, we send notes and ideas to the bot. And it saves everything to `.md` files nicely.  
-
-No new patterns to learn, no new apps to install.
+And it will save everything to `.md` files nicely.  
 
 Telegram bot: <>
+
+Me and my friends have been using this approach for 4+ years.  
 
 Later you can open [app.files.md](https://app.files.md) and make some connections between new and old notes.  
 
