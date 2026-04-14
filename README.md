@@ -56,12 +56,12 @@ I'll quote [I Deleted My Second Brain](https://www.joanwestenberg.com/i-deleted-
 > 
 > **Eventually, I realized I had created a new problem: deferral. The more my system grew, the more I deferred the work of thought to some future self who would sort, tag, distill, and extract the gold.**
 
-The "Second Brain" is exciting. It sounds fancy. You want this.  
+The "Second Brain" is exciting. It sounds fancy. It is thrilling.  
 You invest a lot in structure, guru templates, AI-workflows, plugins.  
 You are very motivated to scrape the wisdom of the whole internet into your second brain.  
 You get dopamine spikes every time **your second brain becomes smarter and bigger**.  
 There's some beauty in your system and neatly organized notes. You feel good.    
-**Your first brain never actually gets smarter**. The actual job is postponed.  
+However, **your first brain never actually gets smarter**. The actual job is postponed.  
 
 Moreover, you rob yourself of the chance to live it through.
 
@@ -85,13 +85,20 @@ Only this time you'll write a message to the bot:
 
 <img>
 
-And it will save everything to `.md` files nicely.  
+And it will save our message to an `.md` file nicely.   
 
-Telegram bot: <>
+Later you can open [app.files.md](https://app.files.md) and make some connections between new and old notes.
 
-Me and my friends have been using this approach for 4+ years.  
+Me and my friends have been using this approach for 4+ years.    
 
-Later you can open [app.files.md](https://app.files.md) and make some connections between new and old notes.  
+- You can start with no structure at all, 0 folders
+- One idea per note
+- A note should be understood without context
+- Related notes should be linked between each other
+
+That's all you need to know.  
+
+Telegram bot: @FilesMDBot (other messengers will follow).
 
 ## Journaling 💚
 
