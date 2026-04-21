@@ -58,7 +58,6 @@ I'll quote [I Deleted My Second Brain](https://www.joanwestenberg.com/i-deleted-
 > **Eventually, I realized I had created a new problem: deferral. The more my system grew, the more I deferred the work of thought to some future self who would sort, tag, distill, and extract the gold.**
 
 The Second Brain is fancy. _It is thrilling._
-
 Advanced guru templates, plugins...  
 One wants to scrape the wisdom of the whole internet.  
 There’s some beauty in this neat system. Every new note brings dopamine.  
