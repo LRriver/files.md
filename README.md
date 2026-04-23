@@ -13,7 +13,8 @@ You can store whole your life:
 
 All in plain `.md` files, locally. LLM-friendly.
 
-Try it out: [app.files.md](https://app.files.md).
+Try it out: [app.files.md](https://app.files.md).  
+Telegram bot: [@FilesMDBot](https://t.me/FilesMDBot).  
 
 ## Another note-taking app?
 Maybe. But this time: 
