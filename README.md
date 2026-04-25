@@ -154,6 +154,7 @@ No energy is spent, no flow is interrupted.
 ## Journaling 💚
 Drop a message.  
 Hover over a bubble and press "To journal".  
+Or just use "jj" or "жж" postfix at the end of your message.  
 
 <div align="center">
     <img src="https://github.com/zakirullin/files.md/raw/main/docs/img/journal.png" title="Journaling" width="450"/>
