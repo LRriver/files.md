@@ -23,6 +23,26 @@ test('send message to chat', async ({ page }) => {
 
 });
 
+test('select all in chat input selects input text, not bubbles', async ({page}) => {
+    await page.click(`#tree .tree-description:has-text('today')`);
+    await page.waitForSelector('#inbox');
+    await page.keyboard.type('First message');
+    await page.waitForTimeout(300);
+    await page.keyboard.press('Enter');
+    await page.waitForSelector('.message');
+
+    await page.locator('#inbox-input').click();
+    await page.keyboard.type('to be cleared');
+    await expect(page.locator('#inbox-input')).toHaveValue('to be cleared');
+
+    const modifier = process.platform === 'darwin' ? 'Meta' : 'Control';
+    await page.keyboard.press(`${modifier}+a`);
+    await page.keyboard.press('Delete');
+
+    await expect(page.locator('#inbox-input')).toHaveValue('');
+    await expect(page.locator('.message-content')).toHaveText('First message');
+});
+
 test('send to chat and move to recent file', async ({ page }) => {
     await page.evaluate(() => {
         window.getTemporaryStorageDirHandle = async function() {

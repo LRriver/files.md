@@ -415,9 +415,8 @@ function attachEventListeners() {
                 return;
             }
 
-            if (e.target.id !== 'chat-input') {
+            if (e.target.id !== 'inbox-input') {
                 e.preventDefault();
-                // Select all messages
                 const allMessages = inbox.querySelectorAll('.message');
                 allMessages.forEach(message => message.classList.add('selected'));
             }
