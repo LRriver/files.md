@@ -1258,16 +1258,28 @@ func (b *Bot) todayLabel(msgsCount ...int) string {
 }
 
 func (b *Bot) randomNote(_ []string) error {
-	files, err := b.fs.FilesAndDirs(fs.DirUserRoot)
+	rootEntries, err := b.fs.FilesAndDirs(fs.DirUserRoot)
 	if err != nil {
-		return fmt.Errorf("random note: can't get files: %w", err)
+		return fmt.Errorf("random note: can't get root: %w", err)
 	}
-	notes := fs.ExcludeConfig(fs.OnlyUserMDFiles(files))
+	type note struct {
+		dir, name string
+	}
+	var notes []note
+	for _, dir := range fs.OnlyNoteDirs(fs.OnlyDirs(rootEntries)) {
+		entries, err := b.fs.FilesAndDirs(dir.Name)
+		if err != nil {
+			return fmt.Errorf("random note: can't get files in %s: %w", dir.Name, err)
+		}
+		for _, f := range fs.OnlyUserMDFiles(entries) {
+			notes = append(notes, note{dir: dir.Name, name: f.Name})
+		}
+	}
 	if len(notes) == 0 {
 		return b.ShowToday(nil)
 	}
-	note := notes[rand.Intn(len(notes))]
-	return b.showFile([]string{fs.DirUserRoot, fs.Hash(note.Name)})
+	pick := notes[rand.Intn(len(notes))]
+	return b.showFile([]string{fs.Hash(pick.dir), fs.Hash(pick.name)})
 }
 
 func (b *Bot) showFiles(_ []string) error {
