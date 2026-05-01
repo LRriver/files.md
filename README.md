@@ -97,6 +97,8 @@ I'll quote [I Deleted My Second Brain](https://www.joanwestenberg.com/i-deleted-
 > When I first started using PKM tools, I believed I was solving a problem of forgetting. Later, I believed I was solving a problem of integration.
 > 
 > **Eventually, I realized I had created a new problem: deferral. The more my system grew, the more I deferred the work of thought to some future self who would sort, tag, distill, and extract the gold.**
+> 
+> **That self never arrived.**
 
 The Second Brain is fancy. _Sounds thrilling._
 Advanced guru templates, plugins...  
@@ -131,13 +133,12 @@ However, when it comes to actual change, collecting too many notes **can prevent
 - **We don’t let new experiences emerge because we already have knowledge**
 - We think we understand, but in reality **we just know**
 - Reading and rereading can easily fool us into believing that we understand a text. The moment we become familiar with something, we start believing we also understand it
-- **At some point our knowing is so good, that we start thinking that we actually do it (or at least tried)**
-
-Do not collect techniques and advice for your future self.  
-Pure knowledge and postponed action will cause you stress.   
+- **At some point our knowing is so good, that we start feeling that we actually do it (or at least tried)**
 
 When you read or listen, there is a small chance to turn an insight into experience.  
 **Do not spend your energy for just writing it down in the hope that one day you'll actually try it.**  
+
+## First experience then notes
 
 I was reading `Atomic Habits` the other day, and I stumbled upon an insight:
 
