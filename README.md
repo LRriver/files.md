@@ -128,12 +128,15 @@ If your goal is to:
 
 Then taking notes is perfectly fine.  
 
-However, when it comes to actual change, collecting too many notes **can prevent us from actual experience.**  
+However, when it comes to real personal changes, collecting too many notes **can prevent us from actual experience.**  
 
-- **We don’t let new experiences emerge because we already have knowledge**
-- We think we understand, but in reality **we just know**
-- Reading and rereading can easily fool us into believing that we understand a text. The moment we become familiar with something, we start believing we also understand it
-- **At some point our knowing is so good, that we start feeling that we actually do it (or at least tried)**
+- Reading and taking notes can easily fool us into believing that we understand a text
+- We think we understand, but in reality **we just know**  
+- **At some point our "knowing" is so good, that we start feeling that we actually do it (or at least tried)**
+
+Having good knowledge about something can create a false sense of competence or accomplishment, leading people to believe they understand or can perform a task even if they haven't practically applied that knowledge.  
+
+The worst thing is that **we don’t let new experiences emerge because we already have knowledge**. It's a knowledge barrier. Life gives us opportunities to live through new experiences, but we refuse, because "we already know".
 
 When you read or listen, there is a small chance to turn an insight into experience.  
 **Do not spend your energy for just writing it down in the hope that one day you'll actually try it.**  
@@ -147,7 +150,7 @@ I was reading `Atomic Habits` the other day, and I stumbled upon an insight:
 _Wow! That's a great insight._
 
 I feel the urge to take a note.   
-Instead, I take time and reflect...  
+Instead, I used this impulse to think through and reflect...  
 
 I had an issue with the gym. I like working out. What I don't like was the preparation and changing clothes at the gym.  
 The preparation and changing clothes at the gym were a resistance for me. My resistance to those things.  
