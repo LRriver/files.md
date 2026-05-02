@@ -37,7 +37,7 @@ function renderSidebar(focusDir = '', modifiedPaths) {
         inbox.setSelected(true);
     }
     inbox.on('click', async function (n, node) {
-        await openInbox();
+        await openToday();
     });
     root.addChild(inbox)
 

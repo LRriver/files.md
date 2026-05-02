@@ -16,7 +16,7 @@ chatInput.addEventListener('input', autoResize);
 // Initial resize to set proper height
 autoResize();
 
-async function addToInbox() {
+async function sendToToday() {
     const text = chatInput.value.trim();
     if (!text) return;
 
@@ -42,8 +42,8 @@ async function addToInbox() {
     scrollToBottom();
 }
 
-async function openInbox() {
-    closeInboxModal();
+async function openToday() {
+    closeTodayModal();
     chatContainer.style.display = 'flex';
     // chatButton.classList.add('hidden');
 
@@ -69,7 +69,7 @@ async function openInbox() {
     scrollToBottom();
 }
 
-async function openInboxModal() {
+async function openTodayModal() {
     chatContainer.classList.add('modal');
     chatContainer.style.display = 'flex';
     // chatButton.classList.add('hidden');
@@ -83,7 +83,7 @@ async function openInboxModal() {
     scrollToBottom();
 }
 
-function closeInboxModal() {
+function closeTodayModal() {
     chatContainer.classList.remove('modal');
     if (!isInbox) {
         chatContainer.style.display = 'none';
@@ -93,20 +93,20 @@ function closeInboxModal() {
     }
 }
 
-async function toggleInboxModal() {
+async function toggleTodayModal() {
     if (isInbox) {
         return;
     }
 
     let isInboxModal = document.getElementById('inbox-container').classList.contains('modal');
     if (isInboxModal) {
-        closeInboxModal();
+        closeTodayModal();
     } else {
-        openInboxModal();
+        openTodayModal();
     }
 }
 
-async function parseMessagesFromInbox() {
+async function parseMessagesFromToday() {
     const file = await ((await getFileHandle(TODAY_PATH, true)).getFile());
     let chat = await file.text();
 
@@ -196,7 +196,7 @@ async function parseMessagesFromInbox() {
     return { messages, text: chat };
 }
 
-async function saveMessagesToInbox(messages) {
+async function saveMessagesToToday(messages) {
     // Group messages by date
     const messagesByDate = {};
     messages.forEach(msg => {
@@ -227,7 +227,7 @@ async function saveMessagesToInbox(messages) {
 //   - [ ] `HH:MM` text    (new, not done)
 //   - [x] `HH:MM` text    (new, done)
 // and rewrites it to the requested done/undone marker.
-async function toggleInboxLine(timestamp, text, done) {
+async function toggleTodayLine(timestamp, text, done) {
     const handle = await getFileHandle(TODAY_PATH, true);
     const file = await handle.getFile();
     let content = await file.text();
@@ -242,7 +242,7 @@ async function toggleInboxLine(timestamp, text, done) {
         : `- [${marker}] ${text}`;
 
     if (!re.test(content)) {
-        logError('toggleInboxLine: line not found', {timestamp, text});
+        logError('toggleTodayLine: line not found', {timestamp, text});
         return;
     }
     content = content.replace(re, replacement);
@@ -253,11 +253,11 @@ async function toggleInboxLine(timestamp, text, done) {
     lastInboxText = content;
 }
 
-function initInbox() {
+function initToday() {
     chatInput.addEventListener('keydown', async function (e) {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            await addToInbox();
+            await sendToToday();
             autoResize();
         }
     });
@@ -287,16 +287,6 @@ function autoResize() {
 
     chatInput.style.height = 'auto';
     chatInput.style.height = Math.min(chatInput.scrollHeight, 250) + 'px';
-}
-
-function sendCmd(cmd, params) {
-    log('Sending CMD to wasm', cmd, params)
-    let cmdObj = {
-        n: cmd,
-        t: "cmd",
-        p: params.map(p => p.toString()),
-    }
-    wasmReplyCmd(JSON.stringify(cmdObj));
 }
 
 function getRecentlyModifiedFiles(n) {
@@ -409,9 +399,9 @@ async function addToJournal(text) {
 async function moveFromInbox(text, callback) {
     await callback(text);
 
-    const { messages } = await parseMessagesFromInbox();
+    const { messages } = await parseMessagesFromToday();
     const filteredMessages = messages.filter(msg => msg.text !== text);
-    await saveMessagesToInbox(filteredMessages);
+    await saveMessagesToToday(filteredMessages);
 }
 
 function attachEventListeners() {
@@ -581,7 +571,7 @@ function attachEventListeners() {
             el.classList.toggle('completed');
             const done = el.classList.contains('completed');
             try {
-                await toggleInboxLine(el.dataset.timestamp, el.dataset.text, done);
+                await toggleTodayLine(el.dataset.timestamp, el.dataset.text, done);
             } catch (err) {
                 logError('Failed to toggle inbox line:', err);
                 el.classList.toggle('completed'); // revert
@@ -759,7 +749,7 @@ function attachEventListeners() {
 }
 
 async function renderMessages() {
-    const { messages, text } = await parseMessagesFromInbox();
+    const { messages, text } = await parseMessagesFromToday();
     if (text === lastInboxText) {
         log('Inbox unchanged, skipping render');
         return;

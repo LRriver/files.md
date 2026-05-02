@@ -983,7 +983,7 @@ async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
     isMessingWithCurrentEditor = true;
     try {
         if (path === TODAY_PATH) {
-            openInbox();
+            openToday();
             return;
         } else {
             const codemirror = document.querySelector('.CodeMirror-wrap');
@@ -994,7 +994,7 @@ async function openFile(path, saveToHistory = true, el = 'editor-textarea') {
         }
         // chatButton.classList.remove('hidden');
         chatContainer.style.display = 'none';
-        closeInboxModal();
+        closeTodayModal();
 
         const start = performance.now();
 
