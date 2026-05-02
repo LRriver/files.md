@@ -646,32 +646,26 @@ func TestSaveFromReplyPhotoWithCaption(t *testing.T) {
 	r.Equal("#### 11 August, Sunday\n![](media/tg_PHOTO_ID)\nCaption\n\nExisting content", content)
 }
 
-// TODO today.md
-//func TestAddTaskToLater(t *testing.T) {
-//	r := require.New(t)
-//
-//	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
-//	r.NoError(err)
-//	r.NoError(userFS.CreateSystemDirs())
-//
-//	err = userFS.Write("today", "First task.md", "")
-//	r.NoError(err)
-//
-//	tgram := tg.NewFakeTG()
-//
-//	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
-//	err = bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv_t", []string{"later", "today", "0824149b387"})))
-//	r.NoError(err)
-//
-//	todayTasks, err := bot.fs.FilesAndDirs("today")
-//	r.NoError(err)
-//	r.Len(todayTasks, 0)
-//
-//	laterTasks, err := bot.fs.FilesAndDirs("later")
-//	r.NoError(err)
-//	r.Len(laterTasks, 1)
-//	r.Equal("First task.md", laterTasks[0].Name)
-//}
+func TestAddTaskToLater(t *testing.T) {
+	r := require.New(t)
+
+	userFS, err := fs.NewFS("/", afero.NewMemMapFs())
+	r.NoError(err)
+	r.NoError(userFS.CreateSystemDirs())
+	r.NoError(userFS.Write(fs.DirUserRoot, fs.TodayFilename, "- [ ] First task"))
+
+	tgram := tg.NewFakeTG()
+	bot := NewBot(-1, tgram, userFS, db.NewFakeDB(), fakeConfig())
+	r.NoError(bot.Reply(tg.NewUpdCmd(-1, tg.NewCmd("mv_later", []string{todayBlockHash("- [ ] First task")}))))
+
+	todayMD, err := userFS.Read(fs.DirUserRoot, fs.TodayFilename)
+	r.NoError(err)
+	r.NotContains(todayMD, "First task")
+
+	laterMD, err := userFS.Read(fs.DirUserRoot, fs.LaterFilename)
+	r.NoError(err)
+	r.Contains(laterMD, "- [ ] First task")
+}
 
 func completeTask(t *testing.T, initial, hashed string) string {
 	t.Helper()
