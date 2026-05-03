@@ -35,17 +35,16 @@ Just drop your note into the chat-like input and press `Enter`.
     <img src="https://github.com/zakirullin/files.md/raw/main/web/img/note1.png" alt="Taking notes" title="Taking notes" width="350"/>
 </div>
 
-That's it. Nothing to learn or setup.
+That's it. Nothing to learn or setup.  
 
 ## Web Application
-1) Open Chrome browser
-2) Open [app.files.md](https://app.files.md)
-3) Click "Install Files.md" on the right side of the address bar:
+1) Open [app.files.md](https://app.files.md) in Chrome browser
+2) Click "Install Files.md" on the right side of the address bar:
 <div align="center">
     <img src="https://github.com/zakirullin/files.md/raw/main/web/img/install.png" alt="Install" title="Install" width="350"/>
 </div>
 
-Open a folder to store your files locally.  
+Open a local folder to persist changes.    
 
 ## Telegram bot 
 1) Open [@FilesMDBot](https://t.me/FilesMDBot)
