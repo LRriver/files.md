@@ -389,7 +389,7 @@ class SearchModal {
                 messagesToRemove = [message];
             }
 
-            let callback = async text => await addHeaderAndText(path, todayHeader(), text, true);
+            let callback = async text => await addHeaderAndText(path, todayHeader(), text, true, false);
             for (const msg of msgs) {
                 await moveFromInbox(msg, callback);
                 await renderMessages();

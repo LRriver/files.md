@@ -717,7 +717,7 @@ function attachEventListeners() {
             }
 
             const path = btn.dataset.filename;
-            let callback = async text => await addHeaderAndText(path, todayHeader(), text, true);
+            let callback = async text => await addHeaderAndText(path, todayHeader(), text, true, false);
             (async () => {
                 for (const msg of msgs) {
                     await moveFromInbox(msg, callback);

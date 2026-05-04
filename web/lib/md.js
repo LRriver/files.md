@@ -99,13 +99,15 @@ function extractHeaderAndBody(text, maxTitleLen) {
 }
 
 
-async function addHeaderAndText(path, header, text, atStart = false) {
+async function addHeaderAndText(path, header, text, atStart = false, withTimestamp = true) {
     const now = new Date();
-    const timestamp = `\`${now.toLocaleTimeString('en-US', {
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit'
-    })}\``;
+    const timestamp = withTimestamp
+        ? `\`${now.toLocaleTimeString('en-US', {
+            hour12: false,
+            hour: '2-digit',
+            minute: '2-digit'
+        })}\` `
+        : '';
 
     let formattedContent;
     if (hasImage(text)) {
@@ -113,10 +115,10 @@ async function addHeaderAndText(path, header, text, atStart = false) {
         if (imgMatch) {
             const imgLink = imgMatch[0];
             const textContent = text.replace(imgLink, '').trim();
-            formattedContent = `${imgLink}\n${timestamp} ${textContent}`;
+            formattedContent = `${imgLink}\n${timestamp}${textContent}`;
         }
     } else {
-        formattedContent = `${timestamp} ${text}`;
+        formattedContent = `${timestamp}${text}`;
     }
 
     let existingContent = '';
