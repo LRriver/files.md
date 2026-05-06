@@ -46,7 +46,7 @@ flowchart TB
 The server runs one binary with three long-running components:
 
 - **Telegram update loop** (`cmd/server/server.go`) - long-polls Telegram, routes each update to a per-user goroutine. Per-user channels serialize one user's messages so concurrent edits to the same files can't race.
-- **HTTP sync server** (`server/sync`) - serves the PWA's sync requests (`/syncTexts`, `/syncText`, `/syncMedia`). When the web app changes `Chat.md` or the chat, it calls `OnTodayUpdate` which triggers the bot to send the user a fresh "Today" keyboard so the two stay in lockstep.
+- **HTTP sync server** (`server/sync`) - serves the PWA's sync requests (`/syncTexts`, `/syncText`, `/syncMedia`). When the web app changes `Chat.md` or the chat, it calls `OnChatUpdate` which triggers the bot to send the user a fresh home keyboard so the two stay in lockstep.
 - **Worker ticker** - every 5 seconds moves scheduled tasks out of `later` into `chat`, and prunes completed checklist items.
 
 Everything reads and writes the same per-user filesystem tree (`UserFS`), which is the single source of truth - `.md` files on disk. The PWA fetches those same files through the sync API.
@@ -65,7 +65,7 @@ flowchart TD
 
     Search[answerSearch<br/>return file results]
     ChanSave[addToFile<br/>append to ChannelName.md]
-    PlugRun[plugin.Handle<br/>send output<br/>ShowToday]
+    PlugRun[plugin.Handle<br/>send output<br/>ShowHome]
     FileReq[answerFileRequest<br/>resolve file]
     DelKB[delAllKeyboards]
     Handler[dispatch to handlers map<br/>e.g. showMoveTo, moveToDir,<br/>complete, schedule, ...]
@@ -117,7 +117,7 @@ flowchart TD
         T8 -->|yes| T9[react 👌] --> TEnd
         T8 -->|no| T10{JournalOnlyMode?}
         T10 -->|yes| T11[moveToJournal] --> TEnd
-        T10 -->|no| T12[showMoveTo<br/>buttons: to Today,<br/>to file, to dir, ...] --> TEnd
+        T10 -->|no| T12[showMoveTo<br/>buttons: to Home,<br/>to file, to dir, ...] --> TEnd
     end
 
     subgraph img [saveFromImage]
@@ -136,7 +136,7 @@ A small taste of the command namespace (~90 entries in total, defined as `CmdX` 
 
 | Category | Examples |
 | --- | --- |
-| Views | `ShowToday`, `ShowLater`, `ShowFiles`, `ShowDirs`, `ShowChecklists`, `ShowSettings` |
+| Views | `ShowHome`, `ShowLater`, `ShowFiles`, `ShowDirs`, `ShowChecklists`, `ShowSettings` |
 | Move | `MoveToExistingDir`, `MoveToNewFile`, `MoveToJournal`, `MoveToLater`, `MoveToChecklist`, `MoveToRead`/`Watch`/`Shop` |
 | Complete | `Complete`, `CompleteFromInbox`, `CompleteListItem`, `CompleteHabit` |
 | Schedule | `Schedule`, `ScheduleForTmrw`, `ShowScheduleForDay`, `Pomodoro` |

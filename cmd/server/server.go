@@ -54,7 +54,7 @@ func main() {
 	telegram := tg.NewTG(api)
 
 	// If today or inbox was changed in web app, we need to send the updated items to the bot.
-	sync.OnTodayUpdate = func(userID int64) { updateToday(telegram, userID) }
+	sync.OnChatUpdate = func(userID int64) { updateBotHome(telegram, userID) }
 
 	// Due tasks scheduler
 	ticker := time.NewTicker(5 * time.Second)
@@ -181,7 +181,7 @@ func newBot(telegram *tg.TG, userID int64) (*server.Bot, error) {
 	return bot, nil
 }
 
-func updateToday(telegram *tg.TG, userID int64) {
+func updateBotHome(telegram *tg.TG, userID int64) {
 	bot, err := newBot(telegram, userID)
 	if err != nil {
 		slog.Error("Bot error: can't create bot", "err", err)
@@ -190,6 +190,6 @@ func updateToday(telegram *tg.TG, userID int64) {
 
 	err = bot.ShowHome(nil)
 	if err != nil {
-		slog.Error("Bot error: can't update today", "userID", userID, "err", err)
+		slog.Error("Server error: can't update bot home", "userID", userID, "err", err)
 	}
 }

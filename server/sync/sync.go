@@ -28,7 +28,7 @@ const (
 	MaxTokenSize  = 4 << 10   // 4 KB
 )
 
-var OnTodayUpdate = func(userID int64) {}
+var OnChatUpdate = func(userID int64) {}
 
 type file struct {
 	Status             string `json:"status"`
@@ -167,7 +167,7 @@ func SyncTexts(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if relativePath == fs.ChatFilename {
-			OnTodayUpdate(userID(r))
+			OnChatUpdate(userID(r))
 		}
 	}
 
@@ -345,7 +345,7 @@ func SyncText(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if relativePath == fs.ChatFilename {
-			OnTodayUpdate(userID(r))
+			OnChatUpdate(userID(r))
 		}
 	}
 
