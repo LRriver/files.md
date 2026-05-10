@@ -82,7 +82,7 @@ var __extends = (this && this.__extends) || (function () {
             newVal = newVal ? exports.suggestedOption : exports.defaultOption;
         }
         if ('customFolders' in newVal) {
-            console.error('[HyperMD][Fold] `customFolders` is removed. To use custom folders, `registerFolder` first.');
+            log.error('[HyperMD][Fold] `customFolders` is removed. To use custom folders, `registerFolder` first.');
             delete newVal['customFolders'];
         }
         ///// apply config

@@ -59,7 +59,7 @@ self.addEventListener('install', event => {
         try {
             cache = await caches.open(cacheName);
         } catch (err) {
-            console.error('Failed to open cache:', err);
+            log.error('Failed to open cache:', err);
             return;
         }
 
@@ -72,7 +72,7 @@ self.addEventListener('install', event => {
             try {
                 await cache.add(url);
             } catch (err) {
-                console.error('✗ Failed to cache:', url, err);
+                log.error('✗ Failed to cache:', url, err);
             }
         }
 

@@ -57,11 +57,11 @@ async function init() {
                 window.history.replaceState({}, '', url);
             } else {
                 alert('The token has expired or is invalid. Please try to request a new link.');
-                console.error('Token exchange failed:', response.status);
+                log.error('Token exchange failed:', response.status);
             }
         } catch (error) {
             alert('The token has expired or is invalid. Please try to request a new link.');
-            console.error('Error exchanging token:', error);
+            log.error('Error exchanging token:', error);
         }
     }
 
