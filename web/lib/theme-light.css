@@ -94,6 +94,13 @@
     padding-top: 18px !important;
 }
 
+/* Skip the gap for the very first line of the doc - usually the doc title.
+   CodeMirror appends each line as a direct child of .CodeMirror-code. */
+.cm-s-hypermd-light .CodeMirror-code > pre.HyperMD-header.HyperMD-header-1:first-child,
+.cm-s-hypermd-light .CodeMirror-code > :first-child pre.HyperMD-header.HyperMD-header-1 {
+    padding-top: 0 !important;
+}
+
 .cm-s-hypermd-light pre.HyperMD-header.HyperMD-header-2 {
     padding-top: 18px !important;
     font-size: 24px !important;
