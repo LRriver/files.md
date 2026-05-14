@@ -85,11 +85,13 @@ You're out of butter and cheese.
 Small things like these drain mental energy.  
 Drop them in chat, then sort into matching checklists.
 
-## How to grow a knowledge base 🌱
+## Grow a knowledge base 🌱
 Connect ideas. Let them compound. Think through.  
 
 <div align="center">
+    <br/>
     <img src="https://github.com/zakirullin/files.md/raw/main/web/img/base.png"/>
+    <br/><br/>
 </div>
 
 1) I used [app.files.md](https://app.files.md) to grow my knowledge about brain and software development
