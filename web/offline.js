@@ -15,6 +15,7 @@ const urlsToCache = [
     '/lib/hypermd.css',
     '/lib/theme-light.css',
     '/lib/theme-dark.css',
+    '/lib/theme-brutal.css',
     '/chat.css',
     '/lib/sidebar.js',
     '/lib/codemirror.js',
