@@ -423,16 +423,19 @@
 
 /* Chat panel: brutal-palette overrides for the few spots in chat.css
    that hard-code colors instead of using CSS variables. */
-/* Whole-message hover: solid neo-orange to match the rest of the app's
-   "thing under the pointer" treatment (sidebar tree, search/move focus,
-   ctx-menu, hint dropdown). The inner editable content area picks up the
-   same orange whenever the parent message is hovered - the descendant
-   selector ensures the row reads as one solid block even when the cursor
-   isn't directly over the content. */
-.message:hover,
-.message:hover .message-content,
-.message-content:hover {
+.message {
+    transition: background 0.15s ease !important;
+}
+.message:hover {
     background: var(--color-neo-orange) !important;
+}
+.complete-btn:hover {
+    background: transparent !important;
+}
+#inbox .message-content,
+#inbox .message-content:hover {
+    background: transparent !important;
+    cursor: pointer !important;
 }
 .message-content.editing {
     background: color-mix(in srgb, var(--color-neo-lime) 35%, transparent) !important;

@@ -358,15 +358,19 @@
     border-radius: 0 !important;
 }
 
-/* Whole-message hover: solid neo-orange to match the rest of the app's
-   "thing under the pointer" treatment. The descendant selector
-   `.message:hover .message-content` ensures the inner editable area
-   picks up the orange too, even when the cursor isn't directly over
-   the content (e.g. hovering the complete-btn or row padding). */
-.message:hover,
-.message:hover .message-content,
-.message-content:hover {
+.message {
+    transition: background 0.15s ease !important;
+}
+.message:hover {
     background: var(--color-neo-orange) !important;
+}
+.complete-btn:hover {
+    background: transparent !important;
+}
+#inbox .message-content,
+#inbox .message-content:hover {
+    background: transparent !important;
+    cursor: pointer !important;
 }
 .message-content.editing {
     background: color-mix(in srgb, var(--color-neo-lime) 25%, transparent) !important;

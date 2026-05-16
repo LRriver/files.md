@@ -832,7 +832,6 @@ async function renderMessages() {
                 </svg>
             </button>
             <div class="message-content"
-                 contenteditable="true"
                  data-text="${escapeHtml(message.text)}"
                  spellcheck="false">${escapeHtml(message.text)}</div>
             <div class="message-footer">
