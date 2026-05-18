@@ -14,6 +14,7 @@ You can store whole your life:
 All in plain `.md` files, local-first. LLM-friendly.  
 
 Try it out: [app.files.md](https://app.files.md)  (Beta)  
+Site: [files.md](https://files.md)  
 
 **My friends and I have been building this project for 5 years. Hope you'll like it!**   
 
