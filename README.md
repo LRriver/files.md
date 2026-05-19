@@ -20,7 +20,7 @@ All in plain `.md` files, local-first. LLM-friendly.
  
 Try it out: [app.files.md](https://app.files.md) (Beta). Main site: [files.md](https://files.md).
 
-**I have been building this project for 5 years**. **[Sponsor it on GitHub 💚](https://github.com/sponsors/zakirullin)**.
+**I have been building this project for 5 years**. Consider **[sponsoring it on GitHub 💚](https://github.com/sponsors/zakirullin)**.
 
 [Dump your thoughts](#dump-your-thoughts) · [How to think deeply](#how-to-think-deeply) · [Second Brain?](#second-brain) 
 
