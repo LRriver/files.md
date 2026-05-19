@@ -11,8 +11,7 @@ You can store your whole life:
 - 💚 Journal, Habits
 - ✅ Checklists, Tasks
 
-All in plain `.md` files, local-first. LLM-friendly.  
-Private - **no data is sent to server**.    
+All in plain `.md` files, local-first. LLM-friendly. **Private - no data is sent to server**.    
 
 > You should own your files, and **the software that opens them**.  
 > You grow your knowledge with your brain.  
@@ -41,12 +40,12 @@ Maybe. But this time:
 
 ## Ways to use it
 
-| Setup                                  | Where your files live                 | Sync across devices | Server needed         | Best for                                                              |
-|----------------------------------------|---------------------------------------|-------------------|-----------------------|-----------------------------------------------------------------------|
-| **Local-first (default)**              | A folder on your device               | No                | None                  | Maximum privacy, your data doesn't leave your device                  |
-| **Cloud-folder sync** (iCloud/Dropbox/Google Drive) | Your existing cloud folder | Yes               | None (cloud provider) | Sync across devices without running a server                          |
-| **[Self-hosted server](docs/your-own-server.md)** | Your own (or local) server | Yes               | One Go binary         | Full control, sync between devices, optional Telegram bot integration |
-| **Hosted ([app.files.md](https://app.files.md))** | Our managed server         | Yes               | api.files.md          | Try it instantly, no setup                                            |
+| Setup                                                  | Where your files live                 | Sync across devices | Server needed         | Best for                                                              |
+|--------------------------------------------------------|---------------------------------------|-------------------|-----------------------|-----------------------------------------------------------------------|
+| **Local-first, no sync server**                        | A folder on your device               | No                | None                  | Maximum privacy, your data doesn't leave your device                  |
+| **Cloud-folder sync** (iCloud/Dropbox/Google Drive)    | Your existing cloud folder | Yes               | None (cloud provider) | Sync across devices without running a server                          |
+| **[Self-hosted sync server](docs/your-own-server.md)** | Your own (or local) server | Yes               | One Go binary         | Full control, sync between devices, optional Telegram bot integration |
+| **Hosted sync server**                                 | Our managed server         | Yes               | api.files.md          | Try it instantly, no setup                                            |
 
 ## How to use
 - Open [app.files.md](https://app.files.md) in Chrome browser
