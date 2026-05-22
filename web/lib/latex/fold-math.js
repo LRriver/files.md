@@ -28,6 +28,17 @@
             return null;
         var cm = stream.cm;
         var line = stream.lineNo;
+        // PATCHED: refuse to fold when an unclosed ``` fence opens above this
+        // math line. The markdown tokenizer doesn't propagate state.code = -1
+        // past one line for unclosed fences, so the math-begin token is still
+        // emitted - we have to detect it ourselves by counting fence lines.
+        var fenceCount = 0;
+        for (var ln = line - 1; ln >= 0; ln--) {
+            if (/^\s*```/.test(cm.getLine(ln))) fenceCount++;
+        }
+        if (fenceCount % 2 === 1) {
+            return null;
+        }
         var maySpanLines = /math-2\b/.test(token.type); // $$ or \[ may span lines!
         var tokenLength = maySpanLines ? 2 : 1; // "$$" or "$"
         // PATCHED: \(...\) is inline (math-1) but its delimiter is 2 chars,
@@ -211,8 +222,24 @@
                     if (!m["mathRenderer"]) continue;
                     var pos = m.find();
                     if (!pos) continue;
+                    // Token-based check (handles cases where the markdown
+                    // tokenizer has correctly entered fence state).
                     var token = cm.getTokenAt({ line: pos.from.line, ch: pos.from.ch + 1 });
                     if (!token || !/formatting-math-begin\b/.test(token.type || "")) {
+                        m.clear();
+                        continue;
+                    }
+                    // Fallback for unclosed ``` fences: the markdown tokenizer
+                    // only propagates state.code = -1 for ONE line past an
+                    // unclosed opener, so the token-check above misses these.
+                    // Walk backward from the math line counting ``` lines; if
+                    // we hit an odd count (unclosed opener above), the math
+                    // is "inside" a fence even if the tokenizer disagrees.
+                    var fenceCount = 0;
+                    for (var ln = pos.from.line - 1; ln >= 0; ln--) {
+                        if (/^\s*```/.test(cm.getLine(ln))) fenceCount++;
+                    }
+                    if (fenceCount % 2 === 1) {
                         m.clear();
                     }
                 }
