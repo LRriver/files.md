@@ -56,7 +56,7 @@ test('open 1k-line plain markdown file', async ({page}) => {
         await page.waitForTimeout(50);
     }
 
-    console.log(`open Big.md: ${median(samples).toFixed(1)} ms (samples: ${samples.map(s => s.toFixed(0)).join(', ')})`);
+    console.log(`Big.md: ${median(samples).toFixed(1)} ms (samples: ${samples.map(s => s.toFixed(0)).join(', ')})`);
 });
 
 test('open file with 50 mermaid blocks', async ({page}) => {
@@ -94,7 +94,7 @@ test('open file with 50 mermaid blocks', async ({page}) => {
         await page.waitForTimeout(50);
     }
 
-    console.log(`open Diagrams.md (50 mermaid): ${median(samples).toFixed(1)} ms (samples: ${samples.map(s => s.toFixed(0)).join(', ')})`);
+    console.log(`Diagrams.md: ${median(samples).toFixed(1)} ms (samples: ${samples.map(s => s.toFixed(0)).join(', ')})`);
 });
 
 test('open file with 200 LaTeX blocks', async ({page}) => {
@@ -130,7 +130,7 @@ test('open file with 200 LaTeX blocks', async ({page}) => {
         await page.waitForTimeout(50);
     }
 
-    console.log(`open Math.md (200 LaTeX): ${median(samples).toFixed(1)} ms (samples: ${samples.map(s => s.toFixed(0)).join(', ')})`);
+    console.log(`Math.md: ${median(samples).toFixed(1)} ms (samples: ${samples.map(s => s.toFixed(0)).join(', ')})`);
 });
 
 test('sidebar render with 1000 files in one folder', async ({page}) => {
