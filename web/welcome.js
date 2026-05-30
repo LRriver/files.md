@@ -202,7 +202,7 @@ const WELCOME_FILES = {
             isFile: true,
         },
         "Change your environment instead of using willpower.md": {
-            "content": "When scientists analyze people who appear to have tremendous self-control, it turns out those individuals aren’t all that different from those who are struggling. Instead, “disciplined” people are better at structuring their lives in a way that does not require heroic willpower and self-control.\n\nIt is the way Luhmann and his slip-box  worked together that allowed him to move freely and flexibly between different tasks and levels of thinking. It is about having the right tools and knowing how to use them - and very few understand that you need both.\n\n" +
+            "content": "When scientists analyze people who appear to have tremendous self-control, it turns out those individuals aren’t all that different from those who are struggling. Instead, “disciplined” people are better at structuring their lives in a way that does not require heroic willpower and self-control.\n\nIt is the way Luhmann and his slipbox  worked together that allowed him to move freely and flexibly between different tasks and levels of thinking. It is about having the right tools and knowing how to use them - and very few understand that you need both.\n\n" +
                 "Luhmann was able to focus on the important things right in front of him, pick up quickly where he left off and stay in control of the process because the structure of his work allowed him to do this.\n\n" +
                 "[Zettelkasten](/brain/Zettelkasten.md)",
             isFile: true,
@@ -213,10 +213,13 @@ const WELCOME_FILES = {
                 "Niklas Luhmann described his slip-box as a \"competent communication partner\", a \"second memory\" he could communicate with.\n\n" +
                 "![](img/slipbox.jpg)\n\n" +
                 "## Main Zettelkasten principles\n" +
-                "**The principle of atomicity**: each note should contain one idea and one idea only. This makes it possible to link ideas with a laser focus.\n\n" +
-                "**The principle of autonomy**: each note should be autonomous, meaning it should be self-contained and comprehensible on its own. This allows notes to be moved, processed, separated, and concatenated independently of its neighbors. It also ensures that notes remain useful even if the original source of information disappears.\n\n" +
-                "**Always link your notes**: whenever you add a note, make sure to link it to already existing notes. Avoid notes that are disconnected from other notes. As Luhmann himself put it, \"each note is just an element that derives its quality from the network of links in the system. A note that is not connected to the network will be lost, will be forgotten by the Zettelkasten\".\n\n" +
-                "**Files.md** has just enough features for you to grow your **Zettelkasten**.\n\n" +
+                "#### The principle of atomicity\n" +
+                "Each note should contain one idea and one idea only. This makes it possible to link ideas with a laser focus.\n\n" +
+                "#### The principle of autonomy\n" +
+                "Each note should be autonomous, meaning it should be self-contained and comprehensible on its own. This allows notes to be moved, processed, separated, and concatenated independently of its neighbors. It also ensures that notes remain useful even if the original source of information disappears.\n\n" +
+                "#### Always link your notes\n" +
+                "Whenever you add a note, make sure to link it to already existing notes. Avoid notes that are disconnected from other notes. As Luhmann himself put it, \"each note is just an element that derives its quality from the network of links in the system. A note that is not connected to the network will be lost, will be forgotten by the Zettelkasten\".\n\n" +
+                "**Files.md** has just enough features for you to grow your **Zettelkasten**. 🌱\n\n" +
                 "[Change your environment instead of using willpower](/brain/Change%20your%20environment%20instead%20of%20using%20willpower.md)\n" +
                 "[Brain is the most complex object in known universe](/brain/Brain%20is%20the%20most%20complex%20object%20in%20known%20universe.md)",
             isFile: true,
