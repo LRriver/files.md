@@ -680,8 +680,8 @@ pre.HyperMD-codeblock-end {
     background: none !important;
 }
 
-.cm-s-hypermd-light img.hmd-image {
-    /*PATCHED*/
+.cm-s-hypermd-light .hmd-image {
+    /*PATCHED, was img.hmd-image - applies to <video> too*/
     max-width: 400px;
     display: inline-block;
 
@@ -691,13 +691,13 @@ pre.HyperMD-codeblock-end {
 }
 
 @media (max-width: 768px) {
-    .cm-s-hypermd-light img.hmd-image {
+    .cm-s-hypermd-light .hmd-image {
         margin-left: 20%;
     }
 }
 
 @media (max-width: 670px) {
-    .cm-s-hypermd-light img.hmd-image {
+    .cm-s-hypermd-light .hmd-image {
         max-width: 300px;
         margin-left: 17%;
     }

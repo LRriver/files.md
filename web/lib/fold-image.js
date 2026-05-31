@@ -41,8 +41,22 @@
                 { // extract the title
                     title = cm.getRange({line: lineNo, ch: from.ch + 2}, {line: lineNo, ch: url_begin.token.start - 1});
                 }
-                let img = document.createElement("img");
-                img.style.cursor = "pointer";
+                // PATCHED, treat ![](foo.mp4) as an inline autoplaying video.
+                // Browsers require `muted` for autoplay; `playsinline` keeps
+                // it inline on iOS instead of opening fullscreen.
+                const isVideo = /\.(mp4|webm|mov)$/i.test(url.split('?')[0]);
+                let media;
+                if (isVideo) {
+                    media = document.createElement("video");
+                    media.autoplay = true;
+                    media.muted = true;
+                    media.loop = true;
+                    media.playsInline = true;
+                    media.controls = true;
+                } else {
+                    media = document.createElement("img");
+                    media.style.cursor = "pointer";
+                }
                 // PATCHED, we don't want blank line with the cursor after image
                 let wrapper = document.createElement("span");
                 wrapper.style.display = "inline-flex";
@@ -50,7 +64,7 @@
                 wrapper.style.alignItems = "center";
                 wrapper.style.width = "100%";
                 wrapper.style.textAlign = "center";
-                wrapper.appendChild(img);
+                wrapper.appendChild(media);
                 wrapper.addEventListener('click', function () {
                     cm.focus();
                     const lineNo = from.line;
@@ -62,62 +76,64 @@
                     clearOnEnter: false,
                     collapsed: true,
                     // PATCHED, was img
-                    replacedWith: img,
+                    replacedWith: media,
                 });
-                img.addEventListener('click', function (e) {
-                    e.stopPropagation();
-                    let modal = document.createElement("div");
-                    modal.style.position = "fixed";
-                    modal.style.top = "0";
-                    modal.style.left = "0";
-                    modal.style.width = "100vw";
-                    modal.style.height = "100vh";
-                    modal.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
-                    modal.style.display = "flex";
-                    modal.style.justifyContent = "center";
-                    modal.style.alignItems = "center";
-                    modal.style.zIndex = "1000";
+                if (!isVideo) {
+                    media.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        let modal = document.createElement("div");
+                        modal.style.position = "fixed";
+                        modal.style.top = "0";
+                        modal.style.left = "0";
+                        modal.style.width = "100vw";
+                        modal.style.height = "100vh";
+                        modal.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+                        modal.style.display = "flex";
+                        modal.style.justifyContent = "center";
+                        modal.style.alignItems = "center";
+                        modal.style.zIndex = "1000";
 
-                    let imgPreview = document.createElement("img");
-                    imgPreview.src = img.src;
-                    imgPreview.className = "hmd-image-preview";
-                    imgPreview.style.maxWidth = "90%";
-                    imgPreview.style.maxHeight = "90%";
-                    imgPreview.style.borderRadius = "8px";
+                        let imgPreview = document.createElement("img");
+                        imgPreview.src = media.src;
+                        imgPreview.className = "hmd-image-preview";
+                        imgPreview.style.maxWidth = "90%";
+                        imgPreview.style.maxHeight = "90%";
+                        imgPreview.style.borderRadius = "8px";
 
-                    modal.appendChild(imgPreview);
+                        modal.appendChild(imgPreview);
 
-                    const closeModal = () => {
-                        document.body.removeChild(modal);
-                        document.removeEventListener("keydown", handleKeyDown, true);
-                    };
+                        const closeModal = () => {
+                            document.body.removeChild(modal);
+                            document.removeEventListener("keydown", handleKeyDown, true);
+                        };
 
-                    modal.addEventListener("click", closeModal,);
-                    const handleKeyDown = (event) => {
-                        if (event.key === "Escape") {
-                            event.stopPropagation();
-                            event.preventDefault();
-                            closeModal();
-                            currentEditor.focus();
-                        }
-                    };
-                    document.addEventListener("keydown", handleKeyDown, true);
+                        modal.addEventListener("click", closeModal,);
+                        const handleKeyDown = (event) => {
+                            if (event.key === "Escape") {
+                                event.stopPropagation();
+                                event.preventDefault();
+                                closeModal();
+                                currentEditor.focus();
+                            }
+                        };
+                        document.addEventListener("keydown", handleKeyDown, true);
 
-                    document.body.appendChild(modal);
-                }, false);
-                img.addEventListener('load', function () {
-                    img.classList.remove("hmd-image-loading");
+                        document.body.appendChild(modal);
+                    }, false);
+                }
+                const readyEvent = isVideo ? 'loadedmetadata' : 'load';
+                media.addEventListener(readyEvent, function () {
+                    media.classList.remove("hmd-image-loading");
                     marker.changed();
                 }, false);
-                img.addEventListener('error', function () {
-                    img.classList.remove("hmd-image-loading");
-                    img.classList.add("hmd-image-error");
+                media.addEventListener('error', function () {
+                    media.classList.remove("hmd-image-loading");
+                    media.classList.add("hmd-image-error");
                     marker.changed();
                 }, false);
-                // img.addEventListener('click', function () { return fold_1.breakMark(cm, marker); }, false);
-                img.className = "hmd-image hmd-image-loading";
-                img.src = url;
-                img.title = title;
+                media.className = "hmd-image hmd-image-loading";
+                media.src = url;
+                media.title = title;
                 return marker;
             }
             // else {
