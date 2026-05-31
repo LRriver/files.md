@@ -25,7 +25,7 @@ Try it out: [app.files.md](https://app.files.md) (Beta). Main site: [files.md](h
 
 You can use this app for Zettelkasten, Second Brain, Notes, Journaling, To Do lists, Checklists, and more.  
 
-[Dump your thoughts](#dump-your-thoughts) · [How to think deeply](#how-to-think-deeply) · [Second Brain?](#second-brain) · [Chatbot](#chatbot) · [Journal, tasks and checklists](#journal) · [Files structure](#files-structure)
+[Dump thoughts](#dump-your-thoughts) · [How to think deeply](#how-to-think-deeply) · [Second Brain?](#second-brain) · [Chatbot](#chatbot) · [Journal, tasks and checklists](#journal) · [Files structure](#files-structure)
 
 ## Another note taking app? 
 Maybe. But this time:
