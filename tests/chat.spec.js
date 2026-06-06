@@ -1,10 +1,77 @@
 const {test, expect} = require('@playwright/test');
 
 test.beforeEach(async ({page}) => {
+    test.setTimeout(15000);
     await page.goto('/index.html');
 
     await page.waitForSelector('#tree', {timeout: 5000});
 });
+
+async function writeRootFile(page, path, content) {
+    await page.evaluate(async ({path, content}) => {
+        const root = await navigator.storage.getDirectory();
+        const parts = path.replace(/^\/+/, '').split('/');
+        const filename = parts.pop();
+        let dir = root;
+        for (const part of parts) {
+            dir = await dir.getDirectoryHandle(part, {create: true});
+        }
+        const fh = await dir.getFileHandle(filename, {create: true});
+        const w = await fh.createWritable();
+        await w.write(content);
+        await w.close();
+    }, {path, content});
+}
+
+async function useExplicitTestApi(page) {
+    await page.evaluate(() => {
+        localStorage.setItem('apiUrl', window.location.origin);
+        localStorage.removeItem('lastServerOk');
+    });
+}
+
+async function reloadApp(page) {
+    await page.reload();
+    await page.waitForSelector('#tree', {timeout: 5000});
+}
+
+async function waitForAssistantAvailable(page) {
+    await expect(page.locator('[data-testid="assistant-panel"]')).toHaveAttribute('data-available', 'true');
+}
+
+async function routeAssistantStatus(page, response) {
+    const requests = [];
+    await page.route('**/llmStatus', async route => {
+        requests.push(route.request());
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify(response),
+        });
+    });
+    return requests;
+}
+
+async function routeAssistantChat(page, handler) {
+    const requests = [];
+    await page.route('**/llmChat', async route => {
+        const request = route.request();
+        requests.push(request);
+        const payload = request.postDataJSON();
+        const response = await handler(payload, request);
+        await route.fulfill({
+            status: response.status || 200,
+            contentType: 'application/json',
+            body: JSON.stringify(response.body || {
+                status: 'ok',
+                requestId: 'test-request',
+                model: 'test-model',
+                text: 'Draft from test assistant',
+            }),
+        });
+    });
+    return requests;
+}
 
 test('send message to chat', async ({ page }) => {
     await page.click(`#tree .tree-item:has-text('chat')`);
@@ -19,6 +86,310 @@ test('send message to chat', async ({ page }) => {
     let content = await page.textContent('.message-content')
     expect(content).toBe('My message');
 
+});
+
+test('does not probe llm status on default hosted api without linked server evidence', async ({page}) => {
+    await page.evaluate(() => {
+        localStorage.removeItem('apiUrl');
+        localStorage.removeItem('lastServerOk');
+    });
+    const statusRequests = await routeAssistantStatus(page, {
+        status: 'ok',
+        available: true,
+        model: 'should-not-be-probed',
+    });
+
+    await reloadApp(page);
+
+    await expect(page.locator('[data-testid="assistant-panel"]')).toHaveAttribute('data-available', 'false');
+    await expect(page.locator('[data-testid="assistant-action-selected"]')).toBeDisabled();
+    await page.waitForTimeout(300);
+    expect(statusRequests).toHaveLength(0);
+});
+
+test('ordinary chat capture never calls llmChat', async ({page}) => {
+    await useExplicitTestApi(page);
+    await routeAssistantStatus(page, {status: 'ok', available: true, model: 'test-model'});
+    const chatRequests = await routeAssistantChat(page, async () => ({
+        body: {status: 'ok', requestId: 'unexpected', text: 'Should not happen'},
+    }));
+    await reloadApp(page);
+    await waitForAssistantAvailable(page);
+
+    await page.waitForSelector('#chat');
+    await page.locator('#chat-input').click();
+    await page.keyboard.type('Capture only');
+    await page.keyboard.press('Enter');
+
+    await expect(page.locator('.message-content').last()).toHaveText('Capture only');
+    expect(chatRequests).toHaveLength(0);
+});
+
+test('chat input switches between microphone and send controls', async ({page}) => {
+    await page.click(`#tree .tree-item:has-text('chat')`);
+    await page.waitForSelector('#chat');
+
+    await expect(page.locator('#mic-chat')).toBeVisible();
+    await expect(page.locator('#send-chat')).toBeHidden();
+
+    await page.locator('#chat-input').fill('Ready to send');
+    await expect(page.locator('#send-chat')).toBeVisible();
+    await expect(page.locator('#mic-chat')).toBeHidden();
+
+    await page.locator('#chat-input').fill('');
+    await expect(page.locator('#mic-chat')).toBeVisible();
+    await expect(page.locator('#send-chat')).toBeHidden();
+});
+
+test('journal suffix capture does not call llmChat', async ({page}) => {
+    await useExplicitTestApi(page);
+    await routeAssistantStatus(page, {status: 'ok', available: true, model: 'test-model'});
+    const chatRequests = await routeAssistantChat(page, async () => ({
+        body: {status: 'ok', requestId: 'unexpected', text: 'Should not happen'},
+    }));
+    await reloadApp(page);
+
+    await page.click(`#tree .tree-item:has-text('chat')`);
+    await page.waitForSelector('#chat');
+    await page.locator('#chat-input').fill('Journal capture jj');
+    await page.keyboard.press('Enter');
+
+    await expect(page.locator('#tree')).toContainText('journal');
+    await expect(page.locator('#chat-input')).toHaveValue('');
+    const chatMessages = await page.locator('.message-content').allTextContents();
+    expect(chatMessages.join('\n')).not.toContain('Journal capture');
+    expect(chatRequests).toHaveLength(0);
+});
+
+test('pasted image capture inserts markdown and does not call llmChat', async ({page}) => {
+    await useExplicitTestApi(page);
+    await routeAssistantStatus(page, {status: 'ok', available: true, model: 'test-model'});
+    const chatRequests = await routeAssistantChat(page, async () => ({
+        body: {status: 'ok', requestId: 'unexpected', text: 'Should not happen'},
+    }));
+    await reloadApp(page);
+
+    await page.click(`#tree .tree-item:has-text('chat')`);
+    await page.waitForSelector('#chat');
+    await page.locator('#chat-input').click();
+    await page.evaluate(() => {
+        const file = new File(['fake image'], 'clip.png', {type: 'image/png'});
+        const data = new DataTransfer();
+        data.items.add(file);
+        document.getElementById('chat-input').dispatchEvent(new ClipboardEvent('paste', {
+            clipboardData: data,
+            bubbles: true,
+            cancelable: true,
+        }));
+    });
+
+    await expect(page.locator('#chat-input')).toHaveValue(/!\[[^\]]+\.png\]\(media\/[^)]*\.png\)\n/);
+    expect(chatRequests).toHaveLength(0);
+});
+
+test('voice capture appends media markdown and does not call llmChat', async ({page}) => {
+    await useExplicitTestApi(page);
+    await routeAssistantStatus(page, {status: 'ok', available: true, model: 'test-model'});
+    const chatRequests = await routeAssistantChat(page, async () => ({
+        body: {status: 'ok', requestId: 'unexpected', text: 'Should not happen'},
+    }));
+    await reloadApp(page);
+    await page.evaluate(() => {
+        Object.defineProperty(navigator, 'mediaDevices', {
+            configurable: true,
+            value: {
+                getUserMedia: async () => ({
+                    getTracks: () => [{stop() {}}],
+                }),
+            },
+        });
+        window.MediaRecorder = class FakeMediaRecorder {
+            static isTypeSupported() { return true; }
+            constructor() {
+                this.state = 'inactive';
+                this.mimeType = 'audio/webm';
+            }
+            start() {
+                this.state = 'recording';
+            }
+            stop() {
+                this.state = 'inactive';
+                this.ondataavailable?.({data: new Blob(['voice'], {type: 'audio/webm'})});
+                this.onstop?.();
+            }
+        };
+    });
+
+    await page.click(`#tree .tree-item:has-text('chat')`);
+    await page.waitForSelector('#chat');
+    await page.locator('#mic-chat').click();
+    await expect(page.locator('#mic-chat')).toHaveClass(/recording/);
+    await page.locator('#mic-chat').click();
+
+    await expect(page.locator('.message-content').last()).toHaveAttribute('data-text', /!\[\]\(media\/.*\.weba\)/);
+    expect(chatRequests).toHaveLength(0);
+});
+
+test('selected-chat assistant sends only selected texts and no unrelated app data', async ({page}) => {
+    await writeRootFile(page, '/Chat.md', [
+        '#### 4 June, Thursday',
+        '- [ ] `09:00` Selected item',
+        '- [ ] `09:01` Other item',
+        '',
+    ].join('\n'));
+    await useExplicitTestApi(page);
+    await routeAssistantStatus(page, {status: 'ok', available: true, model: 'test-model'});
+    const payloads = [];
+    await routeAssistantChat(page, async payload => {
+        payloads.push(payload);
+        return {body: {status: 'ok', requestId: 'selected-1', model: 'test-model', text: 'Only first item'}};
+    });
+    await reloadApp(page);
+    await waitForAssistantAvailable(page);
+
+    await expect(page.locator('.message-content')).toHaveCount(2);
+
+    await page.locator('.message[data-text="Selected item"]').evaluate(el => {
+        document.querySelectorAll('.message.selected').forEach(message => message.classList.remove('selected'));
+        el.classList.add('selected');
+        updateAssistantPanel();
+    });
+    await expect(page.getByTestId('assistant-action-selected')).toBeEnabled();
+    await page.getByTestId('assistant-action-selected').click();
+    await page.getByTestId('assistant-send').click();
+
+    await expect(page.getByTestId('assistant-draft')).toContainText('Only first item');
+    expect(payloads).toHaveLength(1);
+    expect(payloads[0].action).toBe('summarize');
+    expect(payloads[0].contexts).toHaveLength(1);
+    expect(payloads[0].contexts[0]).toMatchObject({
+        source: 'selected-chat',
+        label: 'Selected chat entries',
+    });
+    expect(payloads[0].contexts[0].text).toContain('Selected item');
+    expect(payloads[0].contexts[0].text).not.toContain('Other item');
+    expect(JSON.stringify(payloads[0])).not.toContain('syncFilenames');
+    expect(JSON.stringify(payloads[0])).not.toContain('serverTime');
+    expect(JSON.stringify(payloads[0])).not.toContain('WELCOME_FILES');
+});
+
+test('current-file assistant requires confirmation and sends the labeled file only', async ({page}) => {
+    test.setTimeout(15000);
+    await writeRootFile(page, '/Notes.md', 'Important note body');
+    await useExplicitTestApi(page);
+    await routeAssistantStatus(page, {status: 'ok', available: true, model: 'test-model'});
+    const payloads = [];
+    await routeAssistantChat(page, async payload => {
+        payloads.push(payload);
+        return {body: {status: 'ok', requestId: 'file-1', model: 'test-model', text: 'File draft'}};
+    });
+    await reloadApp(page);
+    await waitForAssistantAvailable(page);
+
+    await page.evaluate(() => openFile('/Notes.md'));
+    await page.evaluate(() => openChatModal());
+    await expect(page.getByTestId('assistant-action-current-file')).toBeEnabled();
+    await page.getByTestId('assistant-action-current-file').click({force: true});
+
+    await expect(page.getByTestId('assistant-context-label')).toContainText('/Notes.md');
+    await expect(page.getByTestId('assistant-send')).toBeDisabled();
+
+    await page.getByTestId('assistant-confirm-context').check();
+    await page.getByTestId('assistant-send').click();
+
+    await expect(page.getByTestId('assistant-draft')).toContainText('File draft');
+    expect(payloads).toHaveLength(1);
+    expect(payloads[0].contexts).toHaveLength(1);
+    expect(payloads[0].contexts[0]).toMatchObject({
+        source: 'current-file',
+        label: 'Current file: /Notes.md',
+        path: '/Notes.md',
+    });
+    expect(payloads[0].contexts[0].text).toContain('Important note body');
+    expect(JSON.stringify(payloads[0])).not.toContain('Selected item');
+    expect(JSON.stringify(payloads[0])).not.toContain('syncFilenames');
+});
+
+test('fullscreen Chat.md disables current-file assistant context', async ({page}) => {
+    test.setTimeout(15000);
+    await useExplicitTestApi(page);
+    await routeAssistantStatus(page, {status: 'ok', available: true, model: 'test-model'});
+    await reloadApp(page);
+    await waitForAssistantAvailable(page);
+
+    await expect(page.getByTestId('assistant-action-current-file')).toBeDisabled();
+    await expect(page.getByTestId('assistant-context-label')).toContainText('Select chat entries or open a note');
+});
+
+test('current-file assistant context clears when switching to fullscreen Chat.md', async ({page}) => {
+    test.setTimeout(15000);
+    await writeRootFile(page, '/Notes.md', 'Important note body');
+    await writeRootFile(page, '/Chat.md', '#### 4 June, Thursday\n- [ ] `09:00` Selected item\n');
+    await useExplicitTestApi(page);
+    await routeAssistantStatus(page, {status: 'ok', available: true, model: 'test-model'});
+    await reloadApp(page);
+    await waitForAssistantAvailable(page);
+
+    await page.click(`#tree .tree-item:has-text('Notes')`);
+    await page.evaluate(() => {
+        llmAssistantState.contexts = [{
+            source: 'current-file',
+            label: 'Current file: /Notes.md',
+            path: '/Notes.md',
+            text: 'Important note body',
+        }];
+        llmAssistantState.confirmed = true;
+        updateAssistantPanel();
+    });
+    await expect(page.getByTestId('assistant-context-label')).toContainText('/Notes.md');
+
+    await page.evaluate(async () => openChat());
+
+    await expect(page.getByTestId('assistant-action-current-file')).toBeDisabled();
+    await expect(page.getByTestId('assistant-context-label')).toContainText('Select chat entries or open a note');
+    await expect(page.getByTestId('assistant-confirm-context')).not.toBeVisible();
+});
+
+test('assistant draft can append to Chat.md and insert into the current file', async ({page}) => {
+    test.setTimeout(15000);
+    await writeRootFile(page, '/Notes.md', 'Original note');
+    await useExplicitTestApi(page);
+    await routeAssistantStatus(page, {status: 'ok', available: true, model: 'test-model'});
+    await routeAssistantChat(page, async () => ({
+        body: {
+            status: 'ok',
+            requestId: 'draft-1',
+            model: 'test-model',
+            text: 'Heading\n- [ ] checklist-looking\n> quote',
+        },
+    }));
+    await reloadApp(page);
+    await waitForAssistantAvailable(page);
+
+    await page.evaluate(() => openFile('/Notes.md'));
+    await page.evaluate(() => openChatModal());
+    await expect(page.getByTestId('assistant-action-current-file')).toBeEnabled();
+    await page.getByTestId('assistant-action-current-file').click({force: true});
+    await page.getByTestId('assistant-confirm-context').check();
+    await page.getByTestId('assistant-send').click();
+    await expect(page.getByTestId('assistant-draft')).toContainText('Heading');
+
+    await page.getByTestId('assistant-append-chat').click();
+    await page.click(`#tree .tree-item:has-text('chat')`);
+    await expect(page.locator('.message-content').last()).toContainText('AI: Heading');
+    await expect(page.locator('.message-content').last()).toContainText('- [ ] checklist-looking');
+
+    await page.evaluate(() => openFile('/Notes.md'));
+    await page.evaluate(() => openChatModal());
+    await expect(page.getByTestId('assistant-action-current-file')).toBeEnabled();
+    await page.getByTestId('assistant-action-current-file').click({force: true});
+    await page.getByTestId('assistant-confirm-context').check();
+    await page.getByTestId('assistant-send').click();
+    await page.getByTestId('assistant-insert-current').click();
+
+    const content = await page.evaluate(() => document.querySelector('.CodeMirror').CodeMirror.getValue());
+    expect(content).toContain('Original note');
+    expect(content).toContain('Heading');
 });
 
 test('select all in chat input selects input text, not bubbles', async ({page}) => {
@@ -62,7 +433,7 @@ test('move to dir creates a new file inside that dir', async ({page}) => {
     await page.locator('.to-file-btn').first().click({force: true});
     await page.waitForSelector('#search', {state: 'visible'});
 
-    await page.locator('#search-results li[data-dir="projects"]').click();
+    await page.locator('#search-results li[data-dir="projects"]').evaluate(el => el.click());
     await page.waitForSelector('.message', {state: 'detached'});
 
     const exists = await page.evaluate(async () => {
@@ -190,7 +561,7 @@ test('move to recent file does not prepend a timestamp', async ({page}) => {
     await page.waitForSelector('.message');
 
     await page.hover('.message');
-    await page.locator('.action-btn').filter({hasText: 'File'}).click({force: true});
+    await page.locator('.to-recent-btn[data-filename="File.md"]').click({force: true});
     await page.waitForSelector('.message', {state: 'detached'});
 
     await page.click(`#tree .tree-item:has-text('File')`);
@@ -253,7 +624,7 @@ test('send to chat and move to recent file', async ({ page }) => {
     expect(content).toBe('My message');
 
     await page.hover('.message');
-    await page.locator('.action-btn').filter({hasText: 'File'}).click({force: true});
+    await page.locator('.to-recent-btn[data-filename="File.md"]').click({force: true});
     await page.waitForSelector('.message', {state: 'detached'});
 
     await page.click(`#tree .tree-item:has-text('File')`);
