@@ -470,6 +470,126 @@
     border-color: var(--col-link);
 }
 
+.chat-assistant-panel {
+    margin: 0 24px 12px 24px;
+    padding: 12px;
+    border: 1px solid var(--col-border);
+    border-radius: 12px;
+    background: var(--col-bg-alt);
+    display: grid;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.assistant-head,
+.assistant-identity,
+.assistant-toolbar,
+.assistant-compose,
+.assistant-draft-header,
+.assistant-draft-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.assistant-head,
+.assistant-draft-header {
+    justify-content: space-between;
+}
+
+.assistant-title {
+    font-weight: 600;
+}
+
+.assistant-orb {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--color-neo-orange);
+}
+
+.assistant-status,
+.assistant-context,
+.assistant-confirm,
+.assistant-error {
+    color: var(--col-tx-alt);
+    font-size: 14px;
+}
+
+.assistant-status {
+    font-size: 13px;
+}
+
+.assistant-toolbar {
+    flex-wrap: wrap;
+}
+
+.assistant-action,
+.assistant-send,
+.assistant-draft-actions button {
+    border: 1px solid var(--col-border);
+    border-radius: 10px;
+    background: var(--col-bg);
+    color: var(--col-tx);
+    cursor: pointer;
+    padding: 8px 12px;
+}
+
+.assistant-action.active,
+.assistant-send:not(:disabled):hover,
+.assistant-draft-actions button:not(:disabled):hover {
+    border-color: var(--color-neo-orange);
+}
+
+.assistant-action:disabled,
+.assistant-send:disabled,
+.assistant-draft-actions button:disabled,
+.chat-assistant-panel.is-unavailable .assistant-prompt {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.assistant-confirm {
+    align-items: center;
+}
+
+.assistant-compose {
+    gap: 10px;
+}
+
+.assistant-prompt {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid var(--col-border);
+    border-radius: 10px;
+    background: var(--col-bg);
+    color: var(--col-tx);
+    font: inherit;
+    padding: 10px 12px;
+}
+
+.assistant-prompt:focus {
+    outline: none;
+    border-color: var(--color-neo-orange);
+}
+
+.assistant-error {
+    color: var(--color-neo-orange);
+}
+
+.assistant-draft {
+    border-top: 1px solid var(--col-border);
+    padding-top: 10px;
+}
+
+.assistant-draft-text {
+    margin: 8px 0 10px;
+    white-space: pre-wrap;
+    color: var(--col-tx);
+    font-family: var(--font-mono);
+    font-size: 13px;
+}
+
 .message-content {
     white-space: pre-wrap;
     line-height: 1.5;

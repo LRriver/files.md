@@ -8,10 +8,22 @@ const micChatBtn = document.getElementById('mic-chat');
 
 const MAX_TITLE_LENGTH = 100;
 const RECENT_FILES = 1;
+const LLM_EXPLICIT_STATUS_KEY = 'llmAssistantStatusProbe';
 
 // Cache of the last Chat.md content we rendered from. renderMessages skips
 // work when the file's content hasn't changed.
 let lastChatText = null;
+let llmStatusProbeScheduled = false;
+let llmAssistantState = {
+    available: false,
+    loading: false,
+    error: '',
+    model: '',
+    action: null,
+    contexts: [],
+    confirmed: false,
+    draft: null,
+};
 
 function updateChatActionButton() {
     if (!sendChatBtn || !micChatBtn) return;
@@ -197,6 +209,7 @@ async function openChat() {
     }
     isChat = true;
     await renderMessages();
+    updateAssistantPanel();
     scrollToBottom();
 }
 
@@ -212,6 +225,7 @@ async function openChatModal() {
 
     chatInput.focus();
     await renderMessages();
+    updateAssistantPanel();
     scrollToBottom();
 }
 
@@ -224,6 +238,7 @@ function closeChatModal() {
         if (sendChatBtn) sendChatBtn.style.display = 'none';
         if (micChatBtn) micChatBtn.style.display = 'none';
     }
+    updateAssistantPanel();
 }
 
 async function toggleChatModal() {
@@ -387,6 +402,9 @@ async function toggleChatMessage(timestamp, text, done) {
 }
 
 function initChat() {
+    ensureAssistantPanel();
+    scheduleLLMStatusCheck();
+    wireAssistantSelectionUpdates();
     chatInput.addEventListener('keydown', async function (e) {
         if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) {
             e.preventDefault();
@@ -394,6 +412,345 @@ function initChat() {
             autoResize();
         }
     });
+}
+
+function shouldProbeLLMStatus() {
+    const explicitApiUrl = localStorage.getItem('apiUrl') !== null;
+    const explicitLLMProbe = localStorage.getItem(LLM_EXPLICIT_STATUS_KEY) === '1';
+    const linkedServerEvidence = typeof hasLastServerOk === 'function' && hasLastServerOk();
+    return explicitApiUrl || explicitLLMProbe || linkedServerEvidence;
+}
+
+function scheduleLLMStatusCheck() {
+    if (llmStatusProbeScheduled) return;
+    llmStatusProbeScheduled = true;
+    ensureAssistantPanel();
+    updateAssistantPanel();
+    if (!shouldProbeLLMStatus()) return;
+    setTimeout(refreshLLMStatus, 120);
+}
+
+async function refreshLLMStatus() {
+    llmAssistantState.loading = true;
+    llmAssistantState.error = '';
+    updateAssistantPanel();
+
+    const {json, error} = await post('llmStatus', {});
+    llmAssistantState.loading = false;
+
+    if (error || !json) {
+        llmAssistantState.available = false;
+        llmAssistantState.model = '';
+        llmAssistantState.error = 'Assistant unavailable';
+        updateAssistantPanel();
+        return;
+    }
+
+    llmAssistantState.available = json.available === true;
+    llmAssistantState.model = json.model || '';
+    llmAssistantState.error = llmAssistantState.available ? '' : 'Assistant unavailable';
+    updateAssistantPanel();
+}
+
+function ensureAssistantPanel() {
+    if (document.getElementById('chat-assistant-panel')) return;
+    const inputWrap = document.getElementById('chat-input-wrap');
+    if (!inputWrap) return;
+
+    const panel = document.createElement('div');
+    panel.id = 'chat-assistant-panel';
+    panel.className = 'chat-assistant-panel';
+    panel.dataset.testid = 'assistant-panel';
+    panel.dataset.available = 'false';
+    panel.innerHTML = `
+        <div class="assistant-head">
+            <div class="assistant-identity">
+                <span class="assistant-orb" aria-hidden="true"></span>
+                <span class="assistant-title">Assistant</span>
+            </div>
+            <span class="assistant-status" data-testid="assistant-status"></span>
+        </div>
+        <div class="assistant-toolbar">
+            <button type="button" class="assistant-action" data-assistant-source="selected-chat" data-testid="assistant-action-selected">Selection</button>
+            <button type="button" class="assistant-action" data-assistant-source="current-file" data-testid="assistant-action-current-file">Current file</button>
+        </div>
+        <div class="assistant-context" data-testid="assistant-context-label"></div>
+        <label class="assistant-confirm">
+            <input type="checkbox" data-testid="assistant-confirm-context">
+            <span>Send labeled current-file context</span>
+        </label>
+        <div class="assistant-compose">
+            <input class="assistant-prompt" data-testid="assistant-prompt" type="text" placeholder="Ask, summarize, or draft from context">
+            <button type="button" class="assistant-send" data-testid="assistant-send">Ask</button>
+        </div>
+        <div class="assistant-error" data-testid="assistant-error"></div>
+        <div class="assistant-draft" data-testid="assistant-draft" hidden>
+            <div class="assistant-draft-header">
+                <span>Draft</span>
+                <span class="assistant-draft-model"></span>
+            </div>
+            <pre class="assistant-draft-text"></pre>
+            <div class="assistant-draft-actions">
+                <button type="button" data-testid="assistant-copy">Copy</button>
+                <button type="button" data-testid="assistant-insert-current">Insert</button>
+                <button type="button" data-testid="assistant-append-chat">Append</button>
+                <button type="button" data-testid="assistant-discard">Discard</button>
+            </div>
+        </div>
+    `;
+    chatContainer.insertBefore(panel, inputWrap);
+
+    panel.querySelector('[data-assistant-source="selected-chat"]').addEventListener('click', () => {
+        selectAssistantContext('selected-chat');
+    });
+    panel.querySelector('[data-assistant-source="current-file"]').addEventListener('click', () => {
+        selectAssistantContext('current-file');
+    });
+    panel.querySelector('[data-testid="assistant-confirm-context"]').addEventListener('change', event => {
+        llmAssistantState.confirmed = event.target.checked;
+        updateAssistantPanel();
+    });
+    panel.querySelector('[data-testid="assistant-send"]').addEventListener('click', sendAssistantRequest);
+    panel.querySelector('[data-testid="assistant-copy"]').addEventListener('click', copyAssistantDraft);
+    panel.querySelector('[data-testid="assistant-insert-current"]').addEventListener('click', insertAssistantDraftIntoCurrentFile);
+    panel.querySelector('[data-testid="assistant-append-chat"]').addEventListener('click', appendAssistantDraftToChat);
+    panel.querySelector('[data-testid="assistant-discard"]').addEventListener('click', discardAssistantDraft);
+}
+
+function wireAssistantSelectionUpdates() {
+    if (chat.dataset.assistantSelectionWired === 'true') return;
+    chat.dataset.assistantSelectionWired = 'true';
+    chat.addEventListener('click', event => {
+        const message = event.target.closest('.message');
+        if (!message || event.target.closest('.message-actions') || event.target.closest('.complete-btn')) return;
+        if (isMetaKey(event) || event.shiftKey) return;
+        chat.querySelectorAll('.message.selected').forEach(el => {
+            if (el !== message) el.classList.remove('selected');
+        });
+        message.classList.add('selected');
+        updateAssistantPanel();
+    });
+    ['click', 'mouseup', 'keyup'].forEach(eventName => {
+        chat.addEventListener(eventName, () => setTimeout(updateAssistantPanel, 0));
+    });
+    const observer = new MutationObserver(() => updateAssistantPanel());
+    observer.observe(chat, {subtree: true, attributes: true, attributeFilter: ['class']});
+}
+
+function getSelectedChatTexts() {
+    return Array.from(chat.querySelectorAll('.message.selected .message-content'))
+        .map(el => el.textContent.trim())
+        .filter(Boolean);
+}
+
+function getCurrentFileAssistantContext() {
+    if (!currentEditor || !currentEditor.path || currentEditor.path === CHAT_PATH) return null;
+    if (typeof currentEditor.getValue !== 'function') return null;
+    return {
+        source: 'current-file',
+        label: `Current file: ${currentEditor.path}`,
+        path: currentEditor.path,
+        text: currentEditor.getValue(),
+    };
+}
+
+function selectAssistantContext(source) {
+    if (!llmAssistantState.available) return;
+    if (source === 'selected-chat') {
+        const texts = getSelectedChatTexts();
+        if (texts.length === 0) return;
+        llmAssistantState.action = 'summarize';
+        llmAssistantState.contexts = [{
+            source: 'selected-chat',
+            label: 'Selected chat entries',
+            text: texts.join('\n\n'),
+        }];
+        llmAssistantState.confirmed = true;
+    } else if (source === 'current-file') {
+        const context = getCurrentFileAssistantContext();
+        if (!context) return;
+        llmAssistantState.action = 'ask';
+        llmAssistantState.contexts = [context];
+        llmAssistantState.confirmed = false;
+    }
+    updateAssistantPanel();
+}
+
+function reconcileAssistantContext(selectedTexts, currentFileContext) {
+    const firstContext = llmAssistantState.contexts[0];
+    if (!firstContext) return;
+
+    const selectedChatGone = firstContext.source === 'selected-chat' && selectedTexts.length === 0;
+    const currentFileGone = firstContext.source === 'current-file' && (
+        !currentFileContext || currentFileContext.path !== firstContext.path
+    );
+    if (!selectedChatGone && !currentFileGone) return;
+
+    llmAssistantState.action = null;
+    llmAssistantState.contexts = [];
+    llmAssistantState.confirmed = false;
+}
+
+function updateAssistantPanel() {
+    ensureAssistantPanel();
+    const panel = document.getElementById('chat-assistant-panel');
+    if (!panel) return;
+
+    const selectedTexts = getSelectedChatTexts();
+    const currentFileContext = getCurrentFileAssistantContext();
+    reconcileAssistantContext(selectedTexts, currentFileContext);
+    const selectedBtn = panel.querySelector('[data-testid="assistant-action-selected"]');
+    const currentFileBtn = panel.querySelector('[data-testid="assistant-action-current-file"]');
+    const sendBtn = panel.querySelector('[data-testid="assistant-send"]');
+    const confirmWrap = panel.querySelector('.assistant-confirm');
+    const confirmInput = panel.querySelector('[data-testid="assistant-confirm-context"]');
+    const statusEl = panel.querySelector('[data-testid="assistant-status"]');
+    const contextEl = panel.querySelector('[data-testid="assistant-context-label"]');
+    const errorEl = panel.querySelector('[data-testid="assistant-error"]');
+    const draftEl = panel.querySelector('[data-testid="assistant-draft"]');
+    const draftText = panel.querySelector('.assistant-draft-text');
+    const draftModel = panel.querySelector('.assistant-draft-model');
+    const insertBtn = panel.querySelector('[data-testid="assistant-insert-current"]');
+
+    panel.dataset.available = llmAssistantState.available ? 'true' : 'false';
+    panel.setAttribute('aria-busy', llmAssistantState.loading ? 'true' : 'false');
+    panel.classList.toggle('is-loading', llmAssistantState.loading);
+    panel.classList.toggle('is-unavailable', !llmAssistantState.available);
+
+    selectedBtn.disabled = !llmAssistantState.available || selectedTexts.length === 0 || llmAssistantState.loading;
+    currentFileBtn.disabled = !llmAssistantState.available || !currentFileContext || llmAssistantState.loading;
+    insertBtn.disabled = !currentFileContext;
+
+    selectedBtn.classList.toggle('active', llmAssistantState.contexts[0]?.source === 'selected-chat');
+    currentFileBtn.classList.toggle('active', llmAssistantState.contexts[0]?.source === 'current-file');
+    selectedBtn.setAttribute('aria-pressed', llmAssistantState.contexts[0]?.source === 'selected-chat' ? 'true' : 'false');
+    currentFileBtn.setAttribute('aria-pressed', llmAssistantState.contexts[0]?.source === 'current-file' ? 'true' : 'false');
+
+    statusEl.textContent = llmAssistantState.loading
+        ? 'Checking'
+        : llmAssistantState.available
+            ? (llmAssistantState.model || 'Available')
+            : 'Unavailable';
+
+    const firstContext = llmAssistantState.contexts[0];
+    if (firstContext) {
+        contextEl.textContent = firstContext.source === 'selected-chat'
+            ? `${firstContext.label}: ${selectedTexts.length} item${selectedTexts.length === 1 ? '' : 's'}`
+            : firstContext.label;
+    } else if (currentFileContext) {
+        contextEl.textContent = `Current file available: ${currentFileContext.path}`;
+    } else {
+        contextEl.textContent = 'Select chat entries or open a note';
+    }
+
+    const needsCurrentFileConfirmation = firstContext?.source === 'current-file';
+    confirmWrap.style.display = needsCurrentFileConfirmation ? 'flex' : 'none';
+    confirmInput.checked = needsCurrentFileConfirmation && llmAssistantState.confirmed;
+
+    const hasContext = llmAssistantState.contexts.length > 0;
+    sendBtn.disabled = !llmAssistantState.available
+        || llmAssistantState.loading
+        || !hasContext
+        || (needsCurrentFileConfirmation && !llmAssistantState.confirmed);
+
+    errorEl.textContent = llmAssistantState.error || '';
+    draftEl.hidden = !llmAssistantState.draft;
+    draftText.textContent = llmAssistantState.draft?.text || '';
+    draftModel.textContent = llmAssistantState.draft?.model || '';
+}
+
+async function sendAssistantRequest() {
+    if (!llmAssistantState.available || llmAssistantState.loading || llmAssistantState.contexts.length === 0) return;
+    const firstContext = llmAssistantState.contexts[0];
+    if (firstContext.source === 'current-file' && !llmAssistantState.confirmed) return;
+
+    const panel = document.getElementById('chat-assistant-panel');
+    const promptInput = panel.querySelector('[data-testid="assistant-prompt"]');
+    const prompt = promptInput.value.trim()
+        || (firstContext.source === 'selected-chat' ? 'Summarize the selected chat entries.' : 'Help with the current file.');
+
+    llmAssistantState.loading = true;
+    llmAssistantState.error = '';
+    updateAssistantPanel();
+
+    const payload = {
+        action: llmAssistantState.action || 'ask',
+        prompt,
+        contexts: llmAssistantState.contexts.map(context => ({
+            source: context.source,
+            label: context.label,
+            path: context.path,
+            text: context.text,
+        })),
+        clientRequestId: `web-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    };
+
+    const {json, error} = await post('llmChat', payload);
+    llmAssistantState.loading = false;
+
+    if (error || !json || json.status === 'error') {
+        llmAssistantState.error = json?.message || error || 'Assistant request failed';
+        updateAssistantPanel();
+        return;
+    }
+
+    llmAssistantState.draft = {
+        text: json.text || '',
+        model: json.model || llmAssistantState.model || '',
+        requestId: json.requestId || '',
+    };
+    updateAssistantPanel();
+}
+
+async function copyAssistantDraft() {
+    const text = llmAssistantState.draft?.text;
+    if (!text) return;
+    try {
+        await navigator.clipboard.writeText(text);
+    } catch (err) {
+        logError('Failed to copy assistant draft:', err);
+    }
+}
+
+async function insertAssistantDraftIntoCurrentFile() {
+    const text = llmAssistantState.draft?.text;
+    const context = getCurrentFileAssistantContext();
+    if (!text || !context) return;
+    currentEditor.replaceSelection(`${text}\n`);
+    if (typeof syncCurrentFile === 'function') {
+        await syncCurrentFile(true);
+    }
+    discardAssistantDraft();
+}
+
+function formatAssistantChatEntry(text) {
+    const now = new Date();
+    const timestamp = now.toLocaleTimeString('en-US', {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    const lines = String(text || '').replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+    const firstLine = (lines[0] || 'Assistant response').trim() || 'Assistant response';
+    const continuation = lines.map(line => `  ${line}`).join('\n');
+    return `\n- [ ] \`${timestamp}\` AI: ${firstLine}\n${continuation}\n`;
+}
+
+async function appendAssistantDraftToChat() {
+    const text = llmAssistantState.draft?.text;
+    if (!text) return;
+    await writeAtEnd(CHAT_PATH, formatAssistantChatEntry(text));
+    chatIsClean = false;
+    lastChatText = null;
+    discardAssistantDraft();
+    await renderMessages();
+    scrollToBottom();
+}
+
+function discardAssistantDraft() {
+    llmAssistantState.draft = null;
+    llmAssistantState.error = '';
+    updateAssistantPanel();
 }
 
 function scrollToBottom() {
@@ -1053,4 +1410,5 @@ async function renderMessages() {
     `).join('');
 
     attachEventListeners();
+    updateAssistantPanel();
 }
