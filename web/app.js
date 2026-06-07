@@ -461,7 +461,7 @@ function doResize(e) {
     if (!isResizing) return;
 
     log(e);
-    const width = e.clientX;
+    const width = e.clientX - sidebar.getBoundingClientRect().left;
     const minWidth = 200;
     const maxWidth = 600;
 

@@ -19,11 +19,12 @@
 	overflow:hidden;
 	text-overflow: ellipsis;
 
-	padding: 2px 4px;
+	padding: 5px 8px;
 	cursor: pointer;
 	display: flex;
 	align-items: center;
-	border-radius: 5px;
+	border-radius: var(--radius-control, 12px);
+	border: 1px solid transparent;
 
 	-webkit-touch-callout: none;
 	-webkit-user-select: none;
@@ -35,10 +36,12 @@
 	text-align: left;
 
 	font-size: 1.1em;
+	transition: background-color var(--transition-fast, 150ms ease), border-color var(--transition-fast, 150ms ease), color var(--transition-fast, 150ms ease), box-shadow var(--transition-fast, 150ms ease);
 }
 
 .tree-container li span.tree-item:hover{
-	background-color: var(--col-bg-active);
+	background: color-mix(in srgb, var(--col-bg-active) 72%, transparent);
+	border-color: var(--surface-border, transparent);
 }
 
 .tree-container li span.tree-mod_icon {
@@ -76,12 +79,23 @@
 	background-color: inherit;
 }
 
-.tree-container span.tree-item.tree-leaf.selected {
-	background-color: var(--col-bg-active);
+.tree-container span.tree-item.selected {
+	background:
+		linear-gradient(135deg,
+			color-mix(in srgb, var(--surface-highlight, #fff) 42%, transparent),
+			color-mix(in srgb, var(--col-bg-active) 70%, transparent));
+	border-color: color-mix(in srgb, var(--color-neo-orange, #e8912d) 28%, var(--surface-border, transparent));
+	color: var(--col-tx);
+	box-shadow:
+		inset 0 1px 0 var(--surface-highlight, transparent),
+		0 5px 14px color-mix(in srgb, var(--col-tx) 7%, transparent);
 }
 
-.tree-container span.tree-item.tree-leaf.selected:hover {
-	background-color: var(--col-bg-active);
+.tree-container span.tree-item.selected:hover {
+	background:
+		linear-gradient(135deg,
+			color-mix(in srgb, var(--surface-highlight, #fff) 50%, transparent),
+			color-mix(in srgb, var(--col-bg-active) 78%, transparent));
 }
 
 /*Drag'n'drop styles*/
@@ -105,10 +119,10 @@
 }
 
 .tree-drop_target {
-	background-color: var(--col-bg-active);
+	background: color-mix(in srgb, var(--color-neo-orange, #e8912d) 12%, var(--col-bg-active));
 	color: var(--col-link);
 	/*border: 2px solid var(--color-border) !important;*/
-	border-radius: 5px;
+	border-radius: var(--radius-control, 12px);
 }
 
 .tree-item[draggable="true"] {
@@ -146,6 +160,7 @@
 	flex: 1;
 	overflow-y: auto;
 	overflow-x: hidden;
+	padding: 2px 0 8px;
 }
 
 #sidebar ul {
@@ -184,9 +199,10 @@
 }
 
 .resize:hover::after {
-	width: 5px;
+	width: 4px;
 	right: 4px;
-	background: var(--col-border);
+	border-radius: var(--radius-pill, 999px);
+	background: color-mix(in srgb, var(--color-neo-orange, #e8912d) 42%, var(--surface-border, var(--col-border)));
 }
 
 #close-sidebar {
@@ -205,11 +221,13 @@
 
 .sidebar-ctx-menu {
 	position: fixed;
-	background: var(--col-bg, #fff);
+	background: var(--surface-glass-strong, var(--col-bg, #fff));
 	color: var(--col-tx, #000);
-	border: 1px solid var(--col-border, rgba(0, 0, 0, 0.15));
-	border-radius: 6px;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+	border: 1px solid var(--surface-border, rgba(0, 0, 0, 0.15));
+	border-radius: var(--radius-control, 12px);
+	box-shadow: var(--surface-shadow-soft, 0 4px 12px rgba(0, 0, 0, 0.12));
+	backdrop-filter: blur(var(--blur-control, 14px)) saturate(1.2);
+	-webkit-backdrop-filter: blur(var(--blur-control, 14px)) saturate(1.2);
 	padding: 4px 0;
 	z-index: 10000;
 	min-width: 140px;
@@ -220,8 +238,10 @@
 .sidebar-ctx-menu-item {
 	padding: 6px 12px;
 	cursor: pointer;
+	border-radius: 8px;
+	margin: 1px 4px;
 }
 
 .sidebar-ctx-menu-item:hover {
-	background: color-mix(in srgb, var(--col-tx, #000) 10%, transparent);
+	background: color-mix(in srgb, var(--col-bg-active) 80%, transparent);
 }

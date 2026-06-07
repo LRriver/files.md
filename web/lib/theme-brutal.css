@@ -390,32 +390,47 @@
 }
 
 .tree-container li span.tree-item {
-    border-radius: 0 !important;
+    border-radius: var(--radius-control, 12px) !important;
 }
 
 .tree-container li span.tree-item:hover {
-    background-color: var(--color-neo-orange) !important;
-    color: #1A1A1A !important;
+    background: color-mix(in srgb, var(--col-bg-active) 72%, transparent) !important;
+    border-color: var(--surface-border, transparent) !important;
+    color: var(--col-tx) !important;
 }
 .tree-container li span.tree-item:hover .tree-mod_icon svg {
-    stroke: #1A1A1A !important;
+    stroke: var(--col-tx) !important;
 }
 
-.tree-container span.tree-item.tree-leaf.selected,
-.tree-container span.tree-item.tree-leaf.selected:hover {
-    background-color: var(--color-neo-blue) !important;
-    color: #FFF !important;
+.tree-container span.tree-item.selected {
+    background:
+        linear-gradient(135deg,
+            color-mix(in srgb, var(--surface-highlight, #fff) 42%, transparent),
+            color-mix(in srgb, var(--col-bg-active) 70%, transparent)) !important;
+    border-color: color-mix(in srgb, var(--color-neo-orange) 28%, var(--surface-border, transparent)) !important;
+    color: var(--col-tx) !important;
+    box-shadow:
+        inset 0 1px 0 var(--surface-highlight, transparent),
+        0 5px 14px color-mix(in srgb, var(--col-tx) 7%, transparent) !important;
 }
-.tree-container span.tree-item.tree-leaf.selected .tree-mod_icon svg,
-.tree-container span.tree-item.tree-leaf.selected:hover .tree-mod_icon svg {
-    stroke: #FFF !important;
+
+.tree-container span.tree-item.selected:hover {
+    background:
+        linear-gradient(135deg,
+            color-mix(in srgb, var(--surface-highlight, #fff) 50%, transparent),
+            color-mix(in srgb, var(--col-bg-active) 78%, transparent)) !important;
+}
+.tree-container span.tree-item.selected .tree-mod_icon svg,
+.tree-container span.tree-item.selected:hover .tree-mod_icon svg {
+    stroke: var(--col-tx) !important;
 }
 
 #search-results .focused,
 #move-results .focused {
-    background-color: var(--color-neo-orange) !important;
-    color: #1A1A1A !important;
-    border-radius: 0 !important;
+    background: color-mix(in srgb, var(--color-neo-orange) 8%, var(--col-bg-active)) !important;
+    color: var(--col-tx) !important;
+    border-radius: var(--radius-control, 12px) !important;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-neo-orange) 22%, transparent) !important;
 }
 
 .message {
@@ -475,18 +490,25 @@
     color: var(--color-neo-orange) !important;
 }
 
-#search, #move,
+#search, #move {
+    border-radius: var(--radius-panel, 24px) !important;
+}
+
 #search-input, #move-input,
 .message-content,
 .message-actions,
 .CodeMirror-hints,
 .CodeMirror-hint,
 .sidebar-ctx-menu {
-    border-radius: 0 !important;
+    border-radius: var(--radius-control, 12px) !important;
+}
+
+#nav-buttons {
+    border-radius: var(--radius-pill, 999px) !important;
 }
 
 #chat-container.modal {
-    border-radius: 7px !important;
+    border-radius: var(--radius-panel, 24px) !important;
 }
 #chat-input {
     border-radius: 6px !important;
