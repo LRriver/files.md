@@ -51,12 +51,14 @@ test('should load the Files.md editor', async ({page}) => {
 });
 
 test('should open markdown file via quick panel and see bold text formatting', async ({page}) => {
-    const isMac = process.platform === 'darwin';
-    const modifier = isMac ? 'Meta' : 'Control';
-    await page.keyboard.press(`${modifier}+k`);
+    // Use the cross-platform app shortcut instead of Meta+K; Chromium can
+    // leave Meta in a sticky focus state across serial tests on macOS hosts.
+    await page.keyboard.press('Control+k');
 
     await page.waitForSelector('#search', {timeout: 3000});
     await page.locator('#search-input').fill('Markdown');
+    await page.locator('#search-input').dispatchEvent('input');
+    await expect(page.locator('#search-results li')).not.toHaveCount(0);
     await page.keyboard.press('Enter');
 
     // Read the main editor's value directly. Two CodeMirror instances live
@@ -404,4 +406,3 @@ test('should handle partical text selection for word-wrap content', async ({page
         expect(selectionData.right).toBe(expectedSelections[i].right);
     }
 });
-

@@ -8,7 +8,7 @@ class SearchModal {
     }
 
     init() {
-        document.getElementById('search').addEventListener('keydown', (event) => {
+        const handleSearchKeydown = (event) => {
             const resultsList = document.getElementById('search-results').querySelectorAll('li');
 
             if (event.key === 'Enter') {
@@ -36,6 +36,20 @@ class SearchModal {
                     currentEditor.focus();
                 }
             }
+        };
+
+        document.getElementById('search').addEventListener('keydown', handleSearchKeydown);
+
+        const searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('input', () => this.search());
+        searchInput.addEventListener('keydown', (event) => {
+            if (!['Enter', 'ArrowDown', 'ArrowUp', 'Escape'].includes(event.key)) return;
+            handleSearchKeydown(event);
+            event.stopPropagation();
+        });
+        document.querySelector('#search form').addEventListener('submit', (event) => {
+            event.preventDefault();
+            this.handleEnterKey();
         });
 
         // Close on outside click
@@ -210,27 +224,44 @@ class SearchModal {
 
         if (buttonElement && this.selectedMsgElement !== null) {
             const rect = buttonElement.getBoundingClientRect();
-            const modalHeight = 300;
+            const viewportWidth = window.innerWidth;
             const viewportHeight = window.innerHeight;
+            const viewportMargin = 12;
             const spaceBelow = viewportHeight - rect.bottom;
             const spaceAbove = rect.top;
 
             // TODO move to css
-            const positionAbove = spaceBelow < modalHeight && spaceAbove > spaceBelow;
             modal.style.position = 'fixed';
-
-            modal.style.left = '50%';
-            modal.style.transform = 'translateX(-50% + 150px)';
             modal.style.width = '320px';
+            modal.style.maxHeight = `calc(100vh - ${viewportMargin * 2}px)`;
+
+            const modalRect = modal.getBoundingClientRect();
+            const modalWidth = modalRect.width;
+            const modalHeight = Math.min(modalRect.height || 320, viewportHeight - viewportMargin * 2);
+            const positionAbove = spaceBelow < modalHeight + 5 && spaceAbove > spaceBelow;
+            const preferredLeft = rect.left + rect.width / 2 - modalWidth / 2;
+            const left = Math.min(
+                Math.max(preferredLeft, viewportMargin),
+                viewportWidth - modalWidth - viewportMargin,
+            );
+            const preferredTop = positionAbove
+                ? rect.top - modalHeight - 5
+                : rect.bottom + 5;
+            const top = Math.min(
+                Math.max(preferredTop, viewportMargin),
+                viewportHeight - modalHeight - viewportMargin,
+            );
+
+            modal.style.left = `${left}px`;
+            modal.style.right = '';
+            modal.style.transform = 'none';
+            modal.style.top = `${top}px`;
+            modal.style.bottom = '';
 
             if (positionAbove) {
-                modal.style.bottom = `${viewportHeight - rect.top + 5}px`;
-                modal.style.top = '';
                 // Reverse the order: results on top, input at bottom
                 modal.classList.add('modal-reversed');
             } else {
-                modal.style.top = `${rect.bottom + 5}px`;
-                modal.style.bottom = '';
                 // Normal order: input on top, results below
                 modal.classList.remove('modal-reversed');
             }
@@ -243,6 +274,7 @@ class SearchModal {
             modal.style.right = '';
             modal.style.transform = 'translate(-50%, 0)';
             modal.style.width = '';
+            modal.style.maxHeight = '';
             modal.classList.remove('modal-reversed');
         }
     }
@@ -407,6 +439,11 @@ class SearchModal {
     }
 
     handleEnterKey() {
+        const inputValue = document.getElementById('search-input').value;
+        if (inputValue !== '') {
+            this.search();
+        }
+
         const resultsList = document.getElementById('search-results').querySelectorAll('li');
         const item = resultsList[this.focusedIndex];
         if (!item) return;

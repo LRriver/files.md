@@ -29,6 +29,14 @@ function initEditor(el) {
         lineNumbers: false,
         extraKeys: {
             // 'Shift-Space': 'autocomplete',
+            'Cmd-K': () => {
+                document.getElementById('search-input').value = '';
+                searchModal.open();
+            },
+            'Ctrl-K': () => {
+                document.getElementById('search-input').value = '';
+                searchModal.open();
+            },
             'Cmd-[': false, 'Cmd-]': false,
             // Mac's default delWrappedLineLeft is a no-op at column 0, so
             // Cmd-Backspace gets stuck at the line start instead of joining
