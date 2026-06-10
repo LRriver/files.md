@@ -282,6 +282,7 @@ function initEditor(el) {
     // Editor keybindings
     newEditor.addKeyMap({
         'Enter': function (cm) { // If header is selected, enter should move cursor to next line
+            if (tableEnterCell(cm)) return;
             const cursor = cm.getCursor();
             // If there's a selection on the header line, just move cursor
             if (cursor.line === 0) {

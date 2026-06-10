@@ -392,6 +392,34 @@ function tableSelectCell(cm) {
     return true;
 }
 
+// Enter inside a table cell moves focus to the same column's cell one row
+// below (skipping the |---| separator), selecting its content if there is
+// any. Returns false on the last row so the default Enter applies.
+function tableEnterCell(cm) {
+    const cursor = cm.getCursor();
+    if (!cm.getStateAfter(cursor.line).hmdTable) return false;
+    const range = tableLineRange(cm, cursor.line);
+    if (!range) return false;
+    let target = cursor.line + 1;
+    if (target === range.from + 1) target++;
+    if (target > range.to) return false;
+    const pipes = (cm.getLine(cursor.line).slice(0, cursor.ch).match(/\|/g) || []).length;
+    const text = cm.getLine(target);
+    let start = 0;
+    for (let i = 0, seen = 0; i < text.length && seen < pipes; i++) {
+        if (text[i] === '|') {
+            seen++;
+            start = i + 1;
+        }
+    }
+    let end = text.indexOf('|', start);
+    if (end < 0) end = text.length;
+    while (start < end && text[start] === ' ') start++;
+    while (end > start && text[end - 1] === ' ') end--;
+    cm.setSelection({line: target, ch: start}, {line: target, ch: end});
+    return true;
+}
+
 // Expand a line known to be inside a table to the table's full line range
 function tableLineRange(cm, line) {
     const state = cm.getStateAfter(line);

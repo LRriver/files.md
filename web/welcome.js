@@ -302,7 +302,7 @@ const WELCOME_FILES = {
             "Syntax:\n`- [ ] Item`\n" +
             "\n" +
             "## Table\n" +
-            "| Col | Col |\n" +
+            "| Header | Header |\n" +
             "| --- | --- |\n" +
             "| Text  | Text   |\n\n" +
             "## Image\n" +
