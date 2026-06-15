@@ -28,7 +28,7 @@ You can use this app for Second Brain, Zettelkasten, Notes, Journaling, Tasks, C
 
 **I have been building this project for 5 years**. Consider **[supporting on GitHub 💚](https://github.com/sponsors/zakirullin)**.  
 
-[Dump your thoughts](#dump-your-thoughts) · [How to think deeply](#how-to-think-deeply) · [Second Brain?](#second-brain) · [Chatbot](#chatbot) · [Journal, tasks, checklists](#journal) · [Files structure](#files-structure)
+[Dump your thoughts](#dump-your-thoughts) · [LLM assistant](#llm-assistant) · [How to think deeply](#how-to-think-deeply) · [Second Brain?](#second-brain) · [Chatbot](#chatbot) · [Journal, tasks, checklists](#journal) · [Files structure](#files-structure)
 
 ## Another note taking app? 
 Maybe. But this time:
@@ -45,6 +45,7 @@ Maybe. But this time:
 - The server is just one binary (or use iCloud/Dropbox/Google Drive for sync)
 - Telegram chatbot for on-the-go access to your files
 - **Chat-like flow for effortless thought capture**
+- Optional self-hosted LLM assistant for drafting from selected chat entries or the current file
 
 ## How to use
 - Open [app.files.md](https://app.files.md)
@@ -76,6 +77,27 @@ Choose where to save (can do later):
 </div>
 
 Everything can be synchronized with the chatbot.
+
+## LLM assistant
+
+For self-hosted setups, Files.md can connect the chat flow to an OpenAI-compatible external LLM provider. The assistant is optional and stays unavailable until the server owner configures provider credentials.
+
+- Draft from selected chat entries.
+- Draft from the current file only after explicit confirmation.
+- Copy the draft, insert it into the current note, or append it back to `Chat.md`.
+- Keep the API key server-side.
+
+Dark mode:
+
+<div align="center">
+    <img src="https://raw.githubusercontent.com/LRriver/files.md/pr-assets-external-llm-chat/pr-assets/external-llm-chat/dark-chat-assistant.png" alt="Files.md LLM assistant in dark mode" title="Files.md LLM assistant in dark mode" width="900"/>
+</div>
+
+Light mode:
+
+<div align="center">
+    <img src="https://raw.githubusercontent.com/LRriver/files.md/pr-assets-external-llm-chat/pr-assets/external-llm-chat/light-chat-assistant.png" alt="Files.md LLM assistant in light mode" title="Files.md LLM assistant in light mode" width="900"/>
+</div>
 
 ## Chatbot
 Open the chat, write something and press `Enter`:
@@ -410,4 +432,3 @@ Read 4K randomly from SSD = 150,000 ns
 - `13.06.2023` Introduced `db.go`. We had to abstract away Redis anyway (otherwise it's hard to write tests).
 - `13.03.2023` Package db.go doesn't store userID (we often use it separately...) Do we? Maybe we gonna use it without userID (like global bot stats?). Added: moved userID to class. Maybe in later we'll need this class outside of user's scope, but let's stay in the future. :)
 - `13.06.2023` We can't ucfist filename in fs.Put - what if that was user-created file (outside the bot), i.e. it comes with lowercase.
-
