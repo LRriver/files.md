@@ -28,6 +28,13 @@ You can use this app for Second Brain, Zettelkasten, Notes, Journaling, Tasks, C
 
 **I have been building this project for 5 years**. Consider **[supporting on GitHub 💚](https://github.com/sponsors/zakirullin)**.  
 
+## This fork adds
+
+This fork builds on upstream Files.md with two visible additions:
+
+- **External LLM assistant for Chat** - connect a self-hosted server to an OpenAI-compatible provider, then draft from selected chat entries or an explicitly confirmed current file. The provider API key stays server-side, and the assistant is unavailable by default until configured.
+- **Liquid Glass-inspired web UI refresh** - floating sidebar, softer glass-style controls, refreshed chat/search/modal surfaces, and updated light/dark visuals while keeping Markdown reading and editing calm.
+
 [Dump your thoughts](#dump-your-thoughts) · [LLM assistant](#llm-assistant) · [How to think deeply](#how-to-think-deeply) · [Second Brain?](#second-brain) · [Chatbot](#chatbot) · [Journal, tasks, checklists](#journal) · [Files structure](#files-structure)
 
 ## Another note taking app? 
